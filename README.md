@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Alan See - Personal Website
 
-## Getting Started
+A minimalist personal portfolio built with Next.js, TypeScript, and Tailwind CSS. Features a cinematic entrance animation and smooth section navigation.
 
-First, run the development server:
+## ✨ Features
+
+- **Cinematic Entrance Animation** - Loading dots, confetti, and theatrical curtain expansion
+- **Minimalist Design** - Clean black/white aesthetic with smooth transitions
+- **Section Navigation** - Projects, Blog, Resume, Notes, and Shelf sections
+- **Responsive Layout** - Works seamlessly across all devices
+- **Fast Performance** - Built on Next.js with optimized animations
+
+## 🛠️ Tech Stack
+
+- **Framework:** Next.js 16
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Animations:** Framer Motion
+- **Icons:** Lucide React
+- **Deployment:** Vercel
+
+## 🚀 Getting Started
+
+### Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the site.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## 📁 Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+├── page.tsx              # Main homepage with entrance animation
+├── layout.tsx            # Root layout
+├── globals.css           # Global styles
+├── projects/             # Projects section
+├── blog/                 # Blog section
+├── resume/               # Resume section
+└── notes/                # Notes section
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🌐 Live Site
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Visit [alansee.dev](https://alansee.dev) to see the site in action.
 
-## Deploy on Vercel
+## 📝 License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Personal project - not open source.
