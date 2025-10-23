@@ -222,7 +222,7 @@ export default function Home() {
             }}
             transition={{ duration: 0.5 }}
             className="flex items-center gap-8 mb-6"
-            pointerEvents={activeSection ? "none" : "auto"}
+            style={{ pointerEvents: activeSection ? "none" : "auto" }}
           >
             {socialLinks.map((link, index) => (
               <motion.a
@@ -252,7 +252,7 @@ export default function Home() {
           {/* Navigation tabs */}
           <motion.div
             className="flex items-center gap-8"
-            pointerEvents={activeSection ? "none" : "auto"}
+            style={{ pointerEvents: activeSection ? "none" : "auto" }}
           >
             {sections.map((section, index) => (
               <motion.button
