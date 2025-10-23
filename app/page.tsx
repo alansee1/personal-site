@@ -89,10 +89,10 @@ export default function Home() {
 
   const socialLinks = [
     { name: "TikTok", icon: "📱", href: "#" },
-    { name: "LinkedIn", icon: Linkedin, href: "#" },
-    { name: "X", icon: "𝕏", href: "#" },
+    { name: "LinkedIn", icon: Linkedin, href: "https://www.linkedin.com/in/alan-see-880bb8140/" },
+    { name: "X", icon: "𝕏", href: "https://twitter.com/seealanh" },
     { name: "Facebook", icon: Facebook, href: "#" },
-    { name: "Github", icon: Github, href: "#" },
+    { name: "Github", icon: Github, href: "https://github.com/alansee1" },
   ];
 
   const sections = ["Projects", "Blog", "Resume", "Notes", "Shelf"];
