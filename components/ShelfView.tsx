@@ -16,8 +16,7 @@ export default function ShelfView() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{
-        opacity: { delay: 1.5, duration: 0.3 },
-        exit: { duration: 0.3, delay: 0 }
+        opacity: { delay: 1.5, duration: 0.3 }
       }}
       className="w-full max-w-4xl"
     >
