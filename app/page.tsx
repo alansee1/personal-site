@@ -29,7 +29,8 @@ export default function Home() {
   const fullName = "Alan See";
 
   // Section navigation state
-  type SectionType = "projects" | "blog" | "resume" | "notes" | "shelf" | null;
+  type Section = "projects" | "blog" | "resume" | "notes" | "shelf";
+  type SectionType = Section | null;
   const [activeSection, setActiveSection] = useState<SectionType>(null);
 
   // Mark component as mounted and check sessionStorage (runs first, prevents hydration mismatch)
@@ -202,11 +203,11 @@ export default function Home() {
   ];
 
   const sections = [
-    { name: "Projects", id: "projects" as SectionType },
-    { name: "Blog", id: "blog" as SectionType },
-    { name: "Resume", id: "resume" as SectionType },
-    { name: "Notes", id: "notes" as SectionType },
-    { name: "Shelf", id: "shelf" as SectionType },
+    { name: "Projects", id: "projects" as Section },
+    { name: "Blog", id: "blog" as Section },
+    { name: "Resume", id: "resume" as Section },
+    { name: "Notes", id: "notes" as Section },
+    { name: "Shelf", id: "shelf" as Section },
   ];
 
   return (
