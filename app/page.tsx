@@ -1,9 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
+import ProjectsView from "@/components/ProjectsView";
+import BlogView from "@/components/BlogView";
+import ResumeView from "@/components/ResumeView";
+import NotesView from "@/components/NotesView";
+import ShelfView from "@/components/ShelfView";
 
 export default function Home() {
   // Track if component has mounted on client (prevents hydration mismatch)
@@ -23,6 +27,10 @@ export default function Home() {
   const [expandLine, setExpandLine] = useState(false);
   const [typingDone, setTypingDone] = useState(false);
   const fullName = "Alan See";
+
+  // Section navigation state
+  type SectionType = "projects" | "blog" | "resume" | "notes" | "shelf" | null;
+  const [activeSection, setActiveSection] = useState<SectionType>(null);
 
   // Mark component as mounted and check sessionStorage (runs first, prevents hydration mismatch)
   useEffect(() => {
@@ -118,6 +126,73 @@ export default function Home() {
     return () => clearInterval(typingInterval);
   }, [showContent, hasSeenAnimation, fullName]);
 
+  // URL sync: Check initial URL on mount and set activeSection
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const path = window.location.pathname;
+    const sectionFromPath = path.slice(1) as SectionType; // Remove leading "/"
+
+    if (sectionFromPath && ["projects", "blog", "resume", "notes", "shelf"].includes(sectionFromPath)) {
+      setActiveSection(sectionFromPath);
+    }
+  }, []);
+
+  // URL sync: Update URL when activeSection changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (activeSection) {
+      window.history.pushState({}, '', `/${activeSection}`);
+    } else {
+      window.history.pushState({}, '', '/');
+    }
+  }, [activeSection]);
+
+  // URL sync: Handle browser back/forward buttons
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      const sectionFromPath = path.slice(1) as SectionType;
+
+      if (sectionFromPath && ["projects", "blog", "resume", "notes", "shelf"].includes(sectionFromPath)) {
+        setActiveSection(sectionFromPath);
+      } else {
+        setActiveSection(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Section navigation handlers
+  const handleSectionClick = (section: SectionType) => {
+    setActiveSection(section);
+  };
+
+  const [returningFrom, setReturningFrom] = useState<SectionType>(null);
+  const [isExiting, setIsExiting] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
+
+  const handleBack = () => {
+    setReturningFrom(activeSection);
+    setIsExiting(true);
+    setIsReturning(true);
+    // Wait for content to fade out (0.3s), then trigger the morph
+    setTimeout(() => {
+      setActiveSection(null);
+      setIsExiting(false);
+      // Clear returning flag after homepage fully appears
+      setTimeout(() => {
+        setIsReturning(false);
+        setReturningFrom(null);
+      }, 2000);
+    }, 300);
+  };
+
   const socialLinks = [
     { name: "TikTok", icon: "fa6-brands:tiktok", href: "#" },
     { name: "LinkedIn", icon: "fa6-brands:linkedin", href: "https://www.linkedin.com/in/alan-see-880bb8140/" },
@@ -127,11 +202,11 @@ export default function Home() {
   ];
 
   const sections = [
-    { name: "Projects", href: "/projects" },
-    { name: "Blog", href: "/blog" },
-    { name: "Resume", href: "/resume" },
-    { name: "Notes", href: "/notes" },
-    { name: "Shelf", href: "/shelf" },
+    { name: "Projects", id: "projects" as SectionType },
+    { name: "Blog", id: "blog" as SectionType },
+    { name: "Resume", id: "resume" as SectionType },
+    { name: "Notes", id: "notes" as SectionType },
+    { name: "Shelf", id: "shelf" as SectionType },
   ];
 
   return (
@@ -222,75 +297,89 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {showContent && (
-        <motion.div
-          initial={{ opacity: hasSeenAnimation ? 1 : 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: hasSeenAnimation ? 0 : 0.5 }}
-          className="relative w-full h-screen bg-black flex flex-col items-center justify-center gap-12"
-        >
-          {/* Spacer - top */}
-          <div className="flex-1" />
-
-          {/* Typing name */}
-          <motion.h1
+      <AnimatePresence>
+        {showContent && (
+          <motion.div
+            key="home"
             initial={{ opacity: hasSeenAnimation ? 1 : 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: hasSeenAnimation ? 0 : 0.5 }}
-            className="text-white text-7xl md:text-8xl font-light tracking-wide"
+            className="relative w-full h-screen bg-black flex flex-col items-center justify-center gap-12"
+            style={{ pointerEvents: activeSection ? "none" : "auto" }}
           >
-            {displayedName}
-            {!typingDone && (
-              <motion.span
-                animate={{ opacity: [1, 0] }}
-                transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
-                className="inline-block w-1 h-16 bg-white ml-2 align-middle"
-              />
-            )}
-          </motion.h1>
+            {/* Spacer - top */}
+            <div className="flex-1" />
 
-          {/* Social icons */}
-          <motion.div
-            initial={{ opacity: hasSeenAnimation ? 1 : 0, y: hasSeenAnimation ? 0 : 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: hasSeenAnimation ? 0 : 0.5 }}
-            className="flex items-center gap-8 mb-6"
-          >
-            {socialLinks.map((link, index) => (
-              <motion.a
-                key={link.name}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                initial={{ opacity: hasSeenAnimation ? 1 : 0, y: hasSeenAnimation ? 0 : 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: hasSeenAnimation ? 0 : fullName.length * 0.1 + 0.5 + index * 0.1,
-                  duration: hasSeenAnimation ? 0 : 0.5,
-                }}
-                whileHover={{ scale: 1.2, y: -4 }}
-                whileTap={{ scale: 0.9 }}
-                className="text-white hover:text-zinc-400 transition-colors"
-                style={{ pointerEvents: typingDone ? "auto" : "none" }}
-              >
-                <Icon icon={link.icon} width="24" height="24" />
-              </motion.a>
-            ))}
-          </motion.div>
+            {/* Typing name */}
+            <motion.h1
+              initial={{ opacity: hasSeenAnimation ? 1 : 0 }}
+              animate={{ opacity: activeSection ? 0 : 1 }}
+              transition={{
+                duration: 0.5,
+                delay: activeSection ? 0 : (isReturning ? 1.4 : 0)
+              }}
+              className="text-white text-7xl md:text-8xl font-light tracking-wide"
+            >
+              {displayedName}
+              {!typingDone && (
+                <motion.span
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
+                  className="inline-block w-1 h-16 bg-white ml-2 align-middle"
+                />
+              )}
+            </motion.h1>
 
-          {/* Navigation tabs */}
-          <motion.div
-            className="flex items-center gap-8"
-            style={{ pointerEvents: typingDone ? "auto" : "none" }}
-          >
-            {sections.map((section, index) => (
-              <Link key={section.name} href={section.href}>
+            {/* Social icons */}
+            <motion.div
+              initial={{ opacity: hasSeenAnimation ? 1 : 0, y: hasSeenAnimation ? 0 : 20 }}
+              animate={{ opacity: activeSection ? 0 : 1, y: 0 }}
+              transition={{
+                duration: 0.5,
+                delay: activeSection ? 0 : (isReturning ? 1.4 : 0)
+              }}
+              className="flex items-center gap-8 mb-6"
+            >
+              {socialLinks.map((link, index) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white hover:text-zinc-400 transition-colors inline-block hover:scale-125 hover:-translate-y-1 active:scale-90"
+                  style={{ pointerEvents: typingDone ? "auto" : "none" }}
+                >
+                  <Icon icon={link.icon} width="24" height="24" />
+                </a>
+              ))}
+            </motion.div>
+
+            {/* Navigation tabs */}
+            <motion.div
+              className="flex items-center gap-8"
+              style={{ pointerEvents: typingDone ? "auto" : "none" }}
+            >
+              {sections.map((section, index) => (
                 <motion.p
+                  key={section.name}
+                  layoutId={section.id}
+                  onClick={() => handleSectionClick(section.id)}
                   initial={{ opacity: hasSeenAnimation ? 1 : 0, y: hasSeenAnimation ? 0 : 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  animate={{
+                    opacity: activeSection
+                      ? (activeSection === section.id ? 1 : 0)
+                      : 1,
+                    y: 0
+                  }}
                   transition={{
-                    delay: hasSeenAnimation ? 0 : fullName.length * 0.1 + 1.5 + index * 0.15,
-                    duration: hasSeenAnimation ? 0 : 0.5,
+                    opacity: {
+                      delay: activeSection ? 0 : (isReturning ? 1.4 : (hasSeenAnimation ? 0 : fullName.length * 0.1 + 1.5 + index * 0.15)),
+                      duration: 0.5
+                    },
+                    y: {
+                      delay: hasSeenAnimation || isReturning ? 0 : fullName.length * 0.1 + 1.5 + index * 0.15,
+                      duration: 0.5
+                    },
+                    layout: { duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96], delay: activeSection ? 0.5 : 0 }
                   }}
                   whileHover={{ y: -2 }}
                   className="text-white text-lg hover:text-zinc-400 transition-colors cursor-pointer"
@@ -298,14 +387,68 @@ export default function Home() {
                 >
                   {section.name}
                 </motion.p>
-              </Link>
-            ))}
-          </motion.div>
+              ))}
+            </motion.div>
 
-          {/* Spacer */}
-          <div className="flex-1" />
-        </motion.div>
-      )}
+            {/* Spacer */}
+            <div className="flex-1" />
+          </motion.div>
+        )}
+
+        {showContent && (
+          <AnimatePresence>
+            {activeSection && (
+              <motion.div
+                key={activeSection}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 w-full min-h-screen bg-transparent flex flex-col items-start pt-8 pl-8"
+              >
+            {/* Back button */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isExiting ? 0 : 1 }}
+              transition={{ duration: 0.3, delay: isExiting ? 0 : 1.5 }}
+              onClick={handleBack}
+              className="text-white text-sm hover:text-zinc-400 transition-colors mb-8 cursor-pointer"
+            >
+              ← back
+            </motion.p>
+
+            {/* Section header with layoutId matching the nav button */}
+            <motion.h1
+              layoutId={activeSection}
+              exit={{ opacity: 1 }}
+              transition={{
+                layout: {
+                  duration: 0.8,
+                  ease: [0.43, 0.13, 0.23, 0.96],
+                  delay: 0.5
+                },
+                exit: { duration: 0 }
+              }}
+              className="text-white text-5xl md:text-6xl font-light tracking-wide mb-12"
+            >
+              {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
+            </motion.h1>
+
+            {/* Section content */}
+            <motion.div
+              animate={{ opacity: isExiting ? 0 : 1 }}
+              transition={{ duration: 0.3, delay: isExiting ? 0 : 1.5 }}
+            >
+              <AnimatePresence mode="wait">
+                {activeSection === "projects" && <ProjectsView key="projects" />}
+                {activeSection === "blog" && <BlogView key="blog" />}
+                {activeSection === "resume" && <ResumeView key="resume" />}
+                {activeSection === "notes" && <NotesView key="notes" />}
+                {activeSection === "shelf" && <ShelfView key="shelf" />}
+              </AnimatePresence>
+            </motion.div>
+          </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
