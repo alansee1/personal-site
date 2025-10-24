@@ -3,23 +3,11 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-export default function BlogPage() {
-  const posts = [
-    {
-      title: "Building a Cinematic Web Animation",
-      date: "Oct 21, 2025",
-      excerpt: "Thoughts on creating delightful micro-interactions and entrance animations..."
-    },
-    {
-      title: "The Art of Minimalism in Design",
-      date: "Oct 15, 2025",
-      excerpt: "Why less is often more when it comes to user interfaces..."
-    },
-    {
-      title: "Getting Started with TypeScript",
-      date: "Oct 10, 2025",
-      excerpt: "A practical guide to adopting TypeScript in your projects..."
-    },
+export default function NotesPage() {
+  const notes = [
+    { date: "Oct 22, 2025", content: "Today I learned about Framer Motion's layout animations - super powerful!" },
+    { date: "Oct 20, 2025", content: "Finished the entrance animation. It took 6+ iterations to get right." },
+    { date: "Oct 18, 2025", content: "Started building the personal website project. Minimalist black/white theme." },
   ];
 
   return (
@@ -41,7 +29,7 @@ export default function BlogPage() {
         transition={{ delay: 0.1 }}
         className="text-white text-5xl md:text-6xl font-light tracking-wide mb-12"
       >
-        Blog
+        Notes
       </motion.h1>
 
       <motion.div
@@ -50,18 +38,17 @@ export default function BlogPage() {
         transition={{ delay: 0.3 }}
         className="w-full max-w-4xl"
       >
-        <div className="space-y-8">
-          {posts.map((post, index) => (
+        <div className="space-y-6">
+          {notes.map((note, index) => (
             <motion.div
-              key={post.title}
+              key={note.date}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 + index * 0.1 }}
-              className="border-b border-zinc-800 pb-8 cursor-pointer hover:opacity-80 transition-opacity"
+              className="border-b border-zinc-800 pb-6"
             >
-              <h3 className="text-xl font-light text-white mb-1">{post.title}</h3>
-              <p className="text-xs text-zinc-500 mb-3">{post.date}</p>
-              <p className="text-zinc-400">{post.excerpt}</p>
+              <p className="text-xs text-zinc-500 mb-2">{note.date}</p>
+              <p className="text-zinc-300">{note.content}</p>
             </motion.div>
           ))}
         </div>

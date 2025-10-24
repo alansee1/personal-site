@@ -1,10 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 
 export default function Home() {
+  // Track if component has mounted on client (prevents hydration mismatch)
+  const [mounted, setMounted] = useState(false);
+
+  // Check if user has seen animation in this session
+  const [hasSeenAnimation, setHasSeenAnimation] = useState(false);
+
   const [showLine, setShowLine] = useState(true);
   const [showContent, setShowContent] = useState(false);
   const [displayedName, setDisplayedName] = useState("");
@@ -15,48 +22,72 @@ export default function Home() {
   const [dropDots, setDropDots] = useState(false);
   const [expandLine, setExpandLine] = useState(false);
   const [typingDone, setTypingDone] = useState(false);
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-  const [hasVisitedSection, setHasVisitedSection] = useState(false);
   const fullName = "Alan See";
 
+  // Mark component as mounted and check sessionStorage (runs first, prevents hydration mismatch)
   useEffect(() => {
-    // Pop in dots one by one
+    // Check sessionStorage and set animation state before mounting UI
+    const animationSeen = sessionStorage.getItem('animationSeen');
+    if (animationSeen) {
+      setHasSeenAnimation(true);
+      setShowLine(false);
+      setShowContent(true);
+      setDisplayedName(fullName);
+      setTypingDone(true);
+    }
+
+    // Mark as mounted - this allows the entrance animation to render (if needed)
+    setMounted(true);
+  }, [fullName]);
+
+  useEffect(() => {
+    // Skip animation if it was already seen in this session
+    if (hasSeenAnimation) {
+      return;
+    }
+
+    // Animation sequence for first-time visitors
+    // Pop in dots one by one (with initial 300ms delay)
     const dotTimers = [0, 1, 2, 3, 4].map((index) =>
       setTimeout(() => {
         setVisibleDots(index + 1);
-      }, index * 300) // 300ms between each dot
+      }, 300 + index * 345)
     );
 
     // After all dots appear, turn them dark
     const activateTimer = setTimeout(() => {
       setDotsActive(true);
-    }, 1500); // All 5 dots appear by 1500ms
+    }, 2025);
 
     // Key press down
     const keyPressTimer = setTimeout(() => {
       setKeyPress(true);
-    }, 1800); // Press down after turning dark
+    }, 2370);
 
     // Show confetti
     const confettiTimer = setTimeout(() => {
       setShowConfetti(true);
-    }, 2050); // Confetti appears as key releases
+    }, 2658);
 
     // Drop the dots
     const dropTimer = setTimeout(() => {
       setDropDots(true);
-    }, 2300); // Drop after confetti
+    }, 2945);
 
     // After dots drop, expand the line
     const expandTimer = setTimeout(() => {
       setExpandLine(true);
-    }, 2800); // Dots finish dropping
+    }, 3520);
 
     // After line expands, show content
     const contentTimer = setTimeout(() => {
       setShowLine(false);
       setShowContent(true);
-    }, 4800); // Line expansion takes 2 seconds
+      // Mark animation as seen for this session
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('animationSeen', 'true');
+      }
+    }, 5820);
 
     return () => {
       dotTimers.forEach(clearTimeout);
@@ -67,12 +98,12 @@ export default function Home() {
       clearTimeout(expandTimer);
       clearTimeout(contentTimer);
     };
-  }, []);
+  }, [hasSeenAnimation, fullName]);
 
   useEffect(() => {
-    if (!showContent) return;
+    if (!showContent || hasSeenAnimation) return;
 
-    // Typing effect for name
+    // Typing effect for name (skip if animation was already seen)
     let index = 0;
     const typingInterval = setInterval(() => {
       if (index <= fullName.length) {
@@ -82,10 +113,10 @@ export default function Home() {
         clearInterval(typingInterval);
         setTypingDone(true);
       }
-    }, 100); // 100ms per character
+    }, 100);
 
     return () => clearInterval(typingInterval);
-  }, [showContent]);
+  }, [showContent, hasSeenAnimation, fullName]);
 
   const socialLinks = [
     { name: "TikTok", icon: "fa6-brands:tiktok", href: "#" },
@@ -95,12 +126,18 @@ export default function Home() {
     { name: "GitHub", icon: "fa6-brands:github", href: "https://github.com/alansee1" },
   ];
 
-  const sections = ["Projects", "Blog", "Resume", "Notes", "Shelf"];
+  const sections = [
+    { name: "Projects", href: "/projects" },
+    { name: "Blog", href: "/blog" },
+    { name: "Resume", href: "/resume" },
+    { name: "Notes", href: "/notes" },
+    { name: "Shelf", href: "/shelf" },
+  ];
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <AnimatePresence>
-        {showLine && (
+        {mounted && showLine && !hasSeenAnimation && (
           <motion.div
             className="absolute inset-0 bg-white flex items-center justify-center"
             exit={{ opacity: 0 }}
@@ -187,9 +224,9 @@ export default function Home() {
 
       {showContent && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={{ opacity: hasSeenAnimation ? 1 : 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: hasSeenAnimation ? 0 : 0.5 }}
           className="relative w-full h-screen bg-black flex flex-col items-center justify-center gap-12"
         >
           {/* Spacer - top */}
@@ -197,11 +234,9 @@ export default function Home() {
 
           {/* Typing name */}
           <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: activeSection ? 0 : 1,
-            }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: hasSeenAnimation ? 1 : 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: hasSeenAnimation ? 0 : 0.5 }}
             className="text-white text-7xl md:text-8xl font-light tracking-wide"
           >
             {displayedName}
@@ -216,13 +251,10 @@ export default function Home() {
 
           {/* Social icons */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{
-              opacity: activeSection ? 0 : 1,
-            }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: hasSeenAnimation ? 1 : 0, y: hasSeenAnimation ? 0 : 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: hasSeenAnimation ? 0 : 0.5 }}
             className="flex items-center gap-8 mb-6"
-            style={{ pointerEvents: activeSection ? "none" : "auto" }}
           >
             {socialLinks.map((link, index) => (
               <motion.a
@@ -230,15 +262,16 @@ export default function Home() {
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: hasSeenAnimation ? 1 : 0, y: hasSeenAnimation ? 0 : 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
-                  delay: fullName.length * 0.1 + 0.5 + index * 0.1,
-                  duration: 0.5,
+                  delay: hasSeenAnimation ? 0 : fullName.length * 0.1 + 0.5 + index * 0.1,
+                  duration: hasSeenAnimation ? 0 : 0.5,
                 }}
                 whileHover={{ scale: 1.2, y: -4 }}
                 whileTap={{ scale: 0.9 }}
                 className="text-white hover:text-zinc-400 transition-colors"
+                style={{ pointerEvents: typingDone ? "auto" : "none" }}
               >
                 <Icon icon={link.icon} width="24" height="24" />
               </motion.a>
@@ -248,29 +281,24 @@ export default function Home() {
           {/* Navigation tabs */}
           <motion.div
             className="flex items-center gap-8"
-            style={{ pointerEvents: activeSection ? "none" : "auto" }}
+            style={{ pointerEvents: typingDone ? "auto" : "none" }}
           >
             {sections.map((section, index) => (
-              <motion.button
-                key={section}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{
-                  opacity: activeSection && section !== activeSection ? 0 : 1,
-                  y: 0,
-                }}
-                transition={{
-                  delay: !hasVisitedSection ? fullName.length * 0.1 + 1.5 + index * 0.15 : 0,
-                  duration: 0.5,
-                }}
-                whileHover={!activeSection ? { y: -2 } : {}}
-                onClick={() => {
-                  setActiveSection(section);
-                  setHasVisitedSection(true);
-                }}
-                className="text-white text-lg hover:text-zinc-400 transition-colors cursor-pointer"
-              >
-                {section}
-              </motion.button>
+              <Link key={section.name} href={section.href}>
+                <motion.p
+                  initial={{ opacity: hasSeenAnimation ? 1 : 0, y: hasSeenAnimation ? 0 : 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: hasSeenAnimation ? 0 : fullName.length * 0.1 + 1.5 + index * 0.15,
+                    duration: hasSeenAnimation ? 0 : 0.5,
+                  }}
+                  whileHover={{ y: -2 }}
+                  className="text-white text-lg hover:text-zinc-400 transition-colors cursor-pointer"
+                  style={{ pointerEvents: typingDone ? "auto" : "none" }}
+                >
+                  {section.name}
+                </motion.p>
+              </Link>
             ))}
           </motion.div>
 
@@ -278,240 +306,6 @@ export default function Home() {
           <div className="flex-1" />
         </motion.div>
       )}
-
-      {/* Section View - Back Button and Content */}
-      <AnimatePresence>
-        {activeSection && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, delay: activeSection ? 0.5 : 1.2 }}
-            className="fixed inset-0 bg-black flex flex-col items-start pt-8 pl-8 z-40 pointer-events-none"
-          >
-          {/* Back Button */}
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            onClick={() => setActiveSection(null)}
-            className="text-white text-sm hover:text-zinc-400 transition-colors mb-8 pointer-events-auto"
-          >
-            ← back
-          </motion.button>
-
-          {/* Section Header */}
-          <motion.h2
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="text-white text-5xl md:text-6xl font-light tracking-wide mb-12"
-          >
-            {activeSection}
-          </motion.h2>
-
-          {/* Section Content */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.6, delay: activeSection ? 0.6 : 0 }}
-            className="w-full max-w-4xl pointer-events-auto"
-          >
-            {activeSection === "Projects" && <ProjectsView />}
-            {activeSection === "Blog" && <BlogView />}
-            {activeSection === "Resume" && <ResumeView />}
-            {activeSection === "Notes" && <NotesView />}
-            {activeSection === "Shelf" && <ShelfView />}
-          </motion.div>
-        </motion.div>
-        )}
-      </AnimatePresence>
-
-    </div>
-  );
-}
-
-// Placeholder Components
-function ProjectsView() {
-  const projects = [
-    {
-      title: "Personal Website",
-      description: "A minimalist portfolio with cinematic entrance animation",
-      tech: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],
-      year: "2025"
-    },
-    {
-      title: "Cool Project #2",
-      description: "Brief description of what this project does",
-      tech: ["React", "Node.js", "MongoDB"],
-      year: "2024"
-    },
-    {
-      title: "Interesting Side Project",
-      description: "Another awesome project you built",
-      tech: ["Python", "FastAPI", "PostgreSQL"],
-      year: "2024"
-    },
-  ];
-
-  return (
-    <div className="space-y-8">
-      {projects.map((project, index) => (
-        <motion.div
-          key={project.title}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="border-b border-zinc-800 pb-8"
-        >
-          <h3 className="text-2xl font-light text-white mb-2">{project.title}</h3>
-          <p className="text-zinc-400 mb-3">{project.description}</p>
-          <div className="flex gap-2 flex-wrap mb-3">
-            {project.tech.map((t) => (
-              <span
-                key={t}
-                className="text-xs px-2 py-1 bg-zinc-900 text-zinc-300 rounded"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
-          <p className="text-xs text-zinc-500">{project.year}</p>
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
-function BlogView() {
-  const posts = [
-    {
-      title: "Building a Cinematic Web Animation",
-      date: "Oct 21, 2025",
-      excerpt: "Thoughts on creating delightful micro-interactions and entrance animations..."
-    },
-    {
-      title: "The Art of Minimalism in Design",
-      date: "Oct 15, 2025",
-      excerpt: "Why less is often more when it comes to user interfaces..."
-    },
-    {
-      title: "Getting Started with TypeScript",
-      date: "Oct 10, 2025",
-      excerpt: "A practical guide to adopting TypeScript in your projects..."
-    },
-  ];
-
-  return (
-    <div className="space-y-8">
-      {posts.map((post, index) => (
-        <motion.div
-          key={post.title}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="border-b border-zinc-800 pb-8 cursor-pointer hover:opacity-80 transition-opacity"
-        >
-          <h3 className="text-xl font-light text-white mb-1">{post.title}</h3>
-          <p className="text-xs text-zinc-500 mb-3">{post.date}</p>
-          <p className="text-zinc-400">{post.excerpt}</p>
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
-function ResumeView() {
-  return (
-    <div className="space-y-12">
-      <div>
-        <h3 className="text-xl font-light text-white mb-4">Experience</h3>
-        <div className="space-y-6">
-          <div className="border-l border-zinc-800 pl-4">
-            <h4 className="text-white font-light">Senior Developer</h4>
-            <p className="text-sm text-zinc-500">Amazing Company, 2023-2025</p>
-            <p className="text-zinc-400 text-sm mt-2">Led development of key features and mentored junior developers.</p>
-          </div>
-          <div className="border-l border-zinc-800 pl-4">
-            <h4 className="text-white font-light">Full Stack Developer</h4>
-            <p className="text-sm text-zinc-500">Tech Startup, 2021-2023</p>
-            <p className="text-zinc-400 text-sm mt-2">Built full-stack applications from concept to production.</p>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <h3 className="text-xl font-light text-white mb-4">Skills</h3>
-        <div className="flex gap-2 flex-wrap">
-          {["TypeScript", "React", "Node.js", "Python", "Next.js", "Tailwind CSS", "PostgreSQL", "MongoDB"].map((skill) => (
-            <span
-              key={skill}
-              className="text-sm px-3 py-1 bg-zinc-900 text-zinc-300 rounded"
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NotesView() {
-  const notes = [
-    { date: "Oct 22, 2025", content: "Today I learned about Framer Motion's layout animations - super powerful!" },
-    { date: "Oct 20, 2025", content: "Finished the entrance animation. It took 6+ iterations to get right." },
-    { date: "Oct 18, 2025", content: "Started building the personal website project. Minimalist black/white theme." },
-  ];
-
-  return (
-    <div className="space-y-6">
-      {notes.map((note, index) => (
-        <motion.div
-          key={note.date}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="border-b border-zinc-800 pb-6"
-        >
-          <p className="text-xs text-zinc-500 mb-2">{note.date}</p>
-          <p className="text-zinc-300">{note.content}</p>
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
-function ShelfView() {
-  const items = [
-    { title: "Atomic Habits", author: "James Clear", type: "Book", rating: 9 },
-    { title: "Design Patterns", author: "Gang of Four", type: "Book", rating: 8 },
-    { title: "The Pragmatic Programmer", author: "Hunt & Thomas", type: "Book", rating: 9 },
-    { title: "Interface Design Principles", type: "Article", rating: 8 },
-  ];
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {items.map((item, index) => (
-        <motion.div
-          key={item.title}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="border border-zinc-800 rounded p-4"
-        >
-          <p className="text-xs text-zinc-500 mb-1">{item.type}</p>
-          <h4 className="text-lg font-light text-white mb-1">{item.title}</h4>
-          {item.author && <p className="text-sm text-zinc-400 mb-3">{item.author}</p>}
-          <div className="flex gap-1">
-            {[...Array(item.rating)].map((_, i) => (
-              <span key={i} className="text-yellow-500 text-sm">★</span>
-            ))}
-          </div>
-        </motion.div>
-      ))}
     </div>
   );
 }
