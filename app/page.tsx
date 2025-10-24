@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Github, Linkedin, Facebook } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 export default function Home() {
   const [showLine, setShowLine] = useState(true);
@@ -88,11 +88,11 @@ export default function Home() {
   }, [showContent]);
 
   const socialLinks = [
-    { name: "TikTok", icon: "📱", href: "#" },
-    { name: "LinkedIn", icon: Linkedin, href: "https://www.linkedin.com/in/alan-see-880bb8140/" },
-    { name: "X", icon: "𝕏", href: "https://twitter.com/seealanh" },
-    { name: "Facebook", icon: Facebook, href: "#" },
-    { name: "Github", icon: Github, href: "https://github.com/alansee1" },
+    { name: "TikTok", icon: "fa6-brands:tiktok", href: "#" },
+    { name: "LinkedIn", icon: "fa6-brands:linkedin", href: "https://www.linkedin.com/in/alan-see-880bb8140/" },
+    { name: "X", icon: "fa6-brands:x-twitter", href: "https://twitter.com/seealanh" },
+    { name: "Facebook", icon: "fa6-brands:facebook", href: "#" },
+    { name: "GitHub", icon: "fa6-brands:github", href: "https://github.com/alansee1" },
   ];
 
   const sections = ["Projects", "Blog", "Resume", "Notes", "Shelf"];
@@ -240,11 +240,7 @@ export default function Home() {
                 whileTap={{ scale: 0.9 }}
                 className="text-white hover:text-zinc-400 transition-colors"
               >
-                {typeof link.icon === "string" ? (
-                  <span className="text-2xl">{link.icon}</span>
-                ) : (
-                  <link.icon size={24} />
-                )}
+                <Icon icon={link.icon} width="24" height="24" />
               </motion.a>
             ))}
           </motion.div>
