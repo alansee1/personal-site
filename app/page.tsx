@@ -331,28 +331,26 @@ export default function Home() {
             </motion.h1>
 
             {/* Social icons */}
-            <motion.div
-              initial={{ opacity: hasSeenAnimation ? 1 : 0, y: hasSeenAnimation ? 0 : 20 }}
-              animate={{ opacity: activeSection ? 0 : 1, y: 0 }}
-              transition={{
-                duration: 0.5,
-                delay: activeSection ? 0 : (isReturning ? 1.4 : 0)
-              }}
-              className="flex items-center gap-8 mb-6"
-            >
+            <div className="flex items-center gap-8 mb-6">
               {socialLinks.map((link, index) => (
-                <a
+                <motion.a
                   key={link.name}
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
+                  initial={{ opacity: hasSeenAnimation ? 1 : 0, y: hasSeenAnimation ? 0 : 20 }}
+                  animate={{ opacity: activeSection ? 0 : 1, y: 0 }}
+                  transition={{
+                    duration: 0.5,
+                    delay: activeSection ? 0 : (isReturning ? 1.4 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + index * 0.1))
+                  }}
                   className="text-white hover:text-zinc-400 transition-colors inline-block hover:scale-125 hover:-translate-y-1 active:scale-90"
                   style={{ pointerEvents: typingDone ? "auto" : "none" }}
                 >
                   <Icon icon={link.icon} width="24" height="24" />
-                </a>
+                </motion.a>
               ))}
-            </motion.div>
+            </div>
 
             {/* Navigation tabs */}
             <motion.div
@@ -373,11 +371,11 @@ export default function Home() {
                   }}
                   transition={{
                     opacity: {
-                      delay: activeSection ? 0 : (isReturning ? 1.4 : (hasSeenAnimation ? 0 : fullName.length * 0.1 + 1.5 + index * 0.15)),
+                      delay: activeSection ? 0 : (isReturning ? 1.4 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + (socialLinks.length - 1) * 0.1 + 0.5 + index * 0.15)),
                       duration: 0.5
                     },
                     y: {
-                      delay: hasSeenAnimation || isReturning ? 0 : fullName.length * 0.1 + 1.5 + index * 0.15,
+                      delay: hasSeenAnimation || isReturning ? 0 : (fullName.length + 1) * 0.1 + 0.3 + (socialLinks.length - 1) * 0.1 + 0.5 + index * 0.15,
                       duration: 0.5
                     },
                     layout: { duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96], delay: activeSection ? 0.5 : 0 }
@@ -424,8 +422,7 @@ export default function Home() {
                   duration: 0.8,
                   ease: [0.43, 0.13, 0.23, 0.96],
                   delay: 0.5
-                },
-                exit: { duration: 0 }
+                }
               }}
               className="text-white text-5xl md:text-6xl font-light tracking-wide mb-12"
             >
