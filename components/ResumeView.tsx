@@ -253,7 +253,7 @@ export default function ResumeView() {
     const typeClass = {
       'current': 'bg-white text-black',
       'past-job': 'bg-zinc-600 text-white',
-      'education': 'bg-zinc-700 text-zinc-300',
+      'education': 'bg-rose-900 text-zinc-300',
       'pct': 'bg-gradient-to-br from-teal-500 to-cyan-500 text-white font-normal'
     }[type] || 'bg-zinc-600';
 
@@ -274,7 +274,7 @@ export default function ResumeView() {
   useEffect(() => {
     if (activeBar && detailsRef.current) {
       setTimeout(() => {
-        detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     }
   }, [activeBar]);
@@ -292,7 +292,7 @@ export default function ResumeView() {
           <span className="text-sm text-zinc-400">Past Jobs</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded bg-zinc-700"></div>
+          <div className="w-5 h-5 rounded bg-rose-900"></div>
           <span className="text-sm text-zinc-400">Education</span>
         </div>
         <div className="flex items-center gap-2">
@@ -322,7 +322,7 @@ export default function ResumeView() {
           <div className="h-0.5 bg-zinc-800 mb-10" />
 
           {/* Gantt Chart */}
-          <div className="relative mb-10" style={{ height: `${ganttHeight}px` }}>
+          <div className="relative mb-4 md:mb-10" style={{ height: `${ganttHeight}px` }}>
             {bars.map((bar) => (
               <div
                 key={bar.id}
@@ -343,7 +343,7 @@ export default function ResumeView() {
       </div>
 
       {/* Details Panel */}
-      <div ref={detailsRef} className="mt-10 relative min-h-[150px]">
+      <div ref={detailsRef} className="mt-4 md:mt-10 relative min-h-[150px]">
         <AnimatePresence mode="wait">
           {activeItem ? (
             <motion.div
