@@ -382,7 +382,10 @@ export default function Home() {
                   }}
                   whileHover={{ y: -2 }}
                   className="text-white text-lg hover:text-zinc-400 transition-colors cursor-pointer"
-                  style={{ pointerEvents: typingDone ? "auto" : "none" }}
+                  style={{
+                    pointerEvents: typingDone ? "auto" : "none",
+                    visibility: (isReturning && returningFrom === section.id) ? "hidden" : "visible"
+                  }}
                 >
                   {section.name}
                 </motion.p>
@@ -399,7 +402,6 @@ export default function Home() {
             {activeSection && (
               <motion.div
                 key={activeSection}
-                exit={{ opacity: 0 }}
                 className="absolute inset-0 w-full min-h-screen bg-transparent flex flex-col items-start pt-8 pl-8"
               >
             {/* Back button */}
