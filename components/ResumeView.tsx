@@ -241,7 +241,7 @@ export default function ResumeView() {
       processedBars.push(barData);
     });
     return processedBars;
-  }); // Removed dependencies to prevent hydration issues
+  }, []); // Empty dependency array - calculate once on mount
 
   const ganttHeight = useMemo(() => {
     if (!bars || bars.length === 0) return 100; // Default height
