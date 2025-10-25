@@ -402,7 +402,7 @@ export default function Home() {
             {activeSection && (
               <motion.div
                 key={activeSection}
-                className="absolute inset-0 w-full min-h-screen bg-transparent flex flex-col items-start pt-8 pl-8"
+                className="absolute inset-0 w-full min-h-screen bg-transparent flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto overflow-x-hidden"
               >
             {/* Back button */}
             <motion.p
