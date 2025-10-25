@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 
 // Types
 interface TimelineItem {
@@ -190,7 +190,8 @@ export default function ResumeView() {
   // Calculate bar dimensions (flipped: newest on left, oldest on right)
   const calculateBarDimensions = (start: string, end: string | null): BarDimensions => {
     const startDate = new Date(start);
-    const endDate = end ? new Date(end) : new Date();
+    // Use a fixed "current" date for consistency between server and client
+    const endDate = end ? new Date(end) : new Date('2025-01-01');
 
     const widthPercent = ((endDate.getTime() - startDate.getTime()) / totalDuration) * 100;
     // Flip the timeline: 100 - position of END date gives us left edge in reversed timeline
@@ -240,9 +241,10 @@ export default function ResumeView() {
       processedBars.push(barData);
     });
     return processedBars;
-  }, []); // Empty dependency array - only calculate once
+  }); // Removed dependencies to prevent hydration issues
 
   const ganttHeight = useMemo(() => {
+    if (!bars || bars.length === 0) return 100; // Default height
     const maxRow = Math.max(...bars.map(b => b.row));
     return (maxRow + 1) * 44 + 20;
   }, [bars]);
@@ -323,7 +325,7 @@ export default function ResumeView() {
 
           {/* Gantt Chart */}
           <div className="relative mb-4 md:mb-10" style={{ height: `${ganttHeight}px` }}>
-            {bars.map((bar) => (
+            {bars && bars.map((bar) => (
               <div
                 key={bar.id}
                 className={getBarClassName(bar.type, activeBar === bar.id)}

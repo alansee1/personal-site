@@ -1,8 +1,9 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
+import { useRouter } from "next/navigation";
 import ProjectsView from "@/components/ProjectsView";
 import BlogView from "@/components/BlogView";
 import ResumeView from "@/components/ResumeView";
@@ -10,6 +11,8 @@ import NotesView from "@/components/NotesView";
 import ShelfView from "@/components/ShelfView";
 
 export default function Home() {
+  const router = useRouter();
+
   // Track if component has mounted on client (prevents hydration mismatch)
   const [mounted, setMounted] = useState(false);
 
@@ -32,12 +35,85 @@ export default function Home() {
   type Section = "projects" | "blog" | "resume" | "notes" | "shelf";
   type SectionType = Section | null;
   const [activeSection, setActiveSection] = useState<SectionType>(null);
+  const [returningFrom, setReturningFrom] = useState<SectionType>(null);
+  const [isExiting, setIsExiting] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
 
   // Mark component as mounted and check sessionStorage (runs first, prevents hydration mismatch)
   useEffect(() => {
-    // Check sessionStorage and set animation state before mounting UI
+    // Check URL params for returning from section
+    const params = new URLSearchParams(window.location.search);
+    const isReturning = params.get('returning') === 'true';
+    const fromSection = params.get('from') as SectionType;
+
+    // Check if we've seen the animation before
     const animationSeen = sessionStorage.getItem('animationSeen');
-    if (animationSeen) {
+
+    // Check if we're triggering a reverse animation
+    if (isReturning && fromSection) {
+      const isFromDirect = params.get('fromDirect') === 'true';
+
+      // Set up state for reverse animation
+      setHasSeenAnimation(true);
+      setShowLine(false);
+      setShowContent(true);
+      setDisplayedName(fullName);
+      setTypingDone(false); // Always start with homepage hidden during animation
+
+      if (isFromDirect) {
+        // For direct routes, we need to establish the layout connection first
+        setActiveSection(fromSection);
+        setReturningFrom(fromSection);
+        setIsExiting(false); // Start with section fully visible
+        setIsReturning(true); // Mark as returning to hide ALL homepage elements
+
+        // Clean URL
+        window.history.replaceState({}, '', '/');
+
+        // Give time for the layout system to establish the connection
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            // Now start the exit sequence
+            setIsExiting(true);
+
+            // Wait for content to fade out
+            setTimeout(() => {
+              setActiveSection(null);
+              setIsExiting(false);
+
+              // Clear returning flag and show homepage after morph
+              setTimeout(() => {
+                setIsReturning(false);
+                setReturningFrom(null);
+                setTypingDone(true);
+              }, 1400);
+            }, 300);
+          });
+        });
+      } else {
+        // For state-based navigation (from sessionStorage flag)
+        setActiveSection(fromSection);
+        setReturningFrom(fromSection);
+        setIsExiting(true);
+        setIsReturning(true);
+        setTypingDone(false); // Ensure homepage is hidden initially
+
+        // Clean URL
+        window.history.replaceState({}, '', '/');
+
+        // Start the reverse animation sequence after mounting
+        setTimeout(() => {
+          setActiveSection(null);
+          setIsExiting(false);
+          setTimeout(() => {
+            setTypingDone(true);
+            setIsReturning(false);
+            setReturningFrom(null);
+            sessionStorage.removeItem('inStateNavigation');
+          }, 1400);
+        }, 300);
+      }
+    } else if (animationSeen) {
       setHasSeenAnimation(true);
       setShowLine(false);
       setShowContent(true);
@@ -127,72 +203,59 @@ export default function Home() {
     return () => clearInterval(typingInterval);
   }, [showContent, hasSeenAnimation, fullName]);
 
-  // URL sync: Check initial URL on mount and set activeSection
+  // Section navigation handlers
+  const handleSectionClick = (section: SectionType) => {
+    setActiveSection(section);
+    // Mark that we're using state-based navigation
+    sessionStorage.setItem('inStateNavigation', 'true');
+    // Update URL without navigation (for bookmarking/sharing)
+    window.history.pushState({}, '', `/${section}`);
+  };
+
+  const handleBack = () => {
+    // Store the section we're returning from
+    const currentSection = activeSection;
+    setReturningFrom(currentSection);
+    setIsExiting(true);
+    setIsReturning(true);
+
+    // Update URL back to homepage
+    window.history.pushState({}, '', '/');
+
+    // Wait for content to fade out (0.3s), then trigger the morph
+    setTimeout(() => {
+      setActiveSection(null);
+      setIsExiting(false);
+
+      // Clear returning flag after morph animation completes
+      // Morph has 0.5s delay + 0.8s duration = 1.3s total
+      setTimeout(() => {
+        setIsReturning(false);
+        setReturningFrom(null);
+        sessionStorage.removeItem('inStateNavigation');
+      }, 1400); // Wait for morph to complete (1.3s) plus a small buffer
+    }, 300);
+  };
+
+  // Handle browser back/forward buttons
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const path = window.location.pathname;
-    const sectionFromPath = path.slice(1) as SectionType; // Remove leading "/"
-
-    if (sectionFromPath && ["projects", "blog", "resume", "notes", "shelf"].includes(sectionFromPath)) {
-      setActiveSection(sectionFromPath);
-    }
-  }, []);
-
-  // URL sync: Update URL when activeSection changes
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    if (activeSection) {
-      window.history.pushState({}, '', `/${activeSection}`);
-    } else {
-      window.history.pushState({}, '', '/');
-    }
-  }, [activeSection]);
-
-  // URL sync: Handle browser back/forward buttons
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
     const handlePopState = () => {
       const path = window.location.pathname;
-      const sectionFromPath = path.slice(1) as SectionType;
-
-      if (sectionFromPath && ["projects", "blog", "resume", "notes", "shelf"].includes(sectionFromPath)) {
-        setActiveSection(sectionFromPath);
-      } else {
-        setActiveSection(null);
+      if (path === '/' && activeSection) {
+        // Browser back to homepage from section
+        handleBack();
+      } else if (path !== '/' && !activeSection) {
+        // Browser forward to section
+        const section = path.slice(1) as Section;
+        if (section && ["projects", "blog", "resume", "notes", "shelf"].includes(section)) {
+          setActiveSection(section);
+        }
       }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  // Section navigation handlers
-  const handleSectionClick = (section: SectionType) => {
-    setActiveSection(section);
-  };
-
-  const [returningFrom, setReturningFrom] = useState<SectionType>(null);
-  const [isExiting, setIsExiting] = useState(false);
-  const [isReturning, setIsReturning] = useState(false);
-
-  const handleBack = () => {
-    setReturningFrom(activeSection);
-    setIsExiting(true);
-    setIsReturning(true);
-    // Wait for content to fade out (0.3s), then trigger the morph
-    setTimeout(() => {
-      setActiveSection(null);
-      setIsExiting(false);
-      // Clear returning flag after homepage fully appears
-      setTimeout(() => {
-        setIsReturning(false);
-        setReturningFrom(null);
-      }, 2000);
-    }, 300);
-  };
+  }, [activeSection]);
 
   const socialLinks = [
     { name: "TikTok", icon: "fa6-brands:tiktok", href: "#" },
@@ -203,15 +266,16 @@ export default function Home() {
   ];
 
   const sections = [
-    { name: "Projects", id: "projects" as Section },
-    { name: "Blog", id: "blog" as Section },
-    { name: "Resume", id: "resume" as Section },
-    { name: "Notes", id: "notes" as Section },
-    { name: "Shelf", id: "shelf" as Section },
+    { name: "Projects", id: "projects" },
+    { name: "Blog", id: "blog" },
+    { name: "Resume", id: "resume" },
+    { name: "Notes", id: "notes" },
+    { name: "Shelf", id: "shelf" },
   ];
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
+      <LayoutGroup>
       <AnimatePresence>
         {mounted && showLine && !hasSeenAnimation && (
           <motion.div
@@ -312,11 +376,11 @@ export default function Home() {
 
             {/* Typing name */}
             <motion.h1
-              initial={{ opacity: hasSeenAnimation ? 1 : 0 }}
-              animate={{ opacity: activeSection ? 0 : 1 }}
+              initial={{ opacity: (hasSeenAnimation && !isReturning) ? 1 : 0 }}
+              animate={{ opacity: activeSection || isReturning ? 0 : 1 }}
               transition={{
                 duration: 0.5,
-                delay: activeSection ? 0 : (isReturning ? 1.4 : 0)
+                delay: activeSection ? 0 : 0
               }}
               className="text-white text-7xl md:text-8xl font-light tracking-wide"
             >
@@ -338,11 +402,11 @@ export default function Home() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  initial={{ opacity: hasSeenAnimation ? 1 : 0, y: hasSeenAnimation ? 0 : 20 }}
-                  animate={{ opacity: activeSection ? 0 : 1, y: 0 }}
+                  initial={{ opacity: (hasSeenAnimation && !isReturning) ? 1 : 0, y: hasSeenAnimation ? 0 : 20 }}
+                  animate={{ opacity: activeSection || isReturning ? 0 : 1, y: 0 }}
                   transition={{
                     duration: 0.5,
-                    delay: activeSection ? 0 : (isReturning ? 1.4 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + index * 0.1))
+                    delay: activeSection ? 0 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + index * 0.1)
                   }}
                   className="text-white hover:text-zinc-400 transition-colors inline-block hover:scale-125 hover:-translate-y-1 active:scale-90"
                   style={{ pointerEvents: typingDone ? "auto" : "none" }}
@@ -361,21 +425,21 @@ export default function Home() {
                 <motion.p
                   key={section.name}
                   layoutId={section.id}
-                  onClick={() => handleSectionClick(section.id)}
-                  initial={{ opacity: hasSeenAnimation ? 1 : 0, y: hasSeenAnimation ? 0 : 10 }}
+                  onClick={() => handleSectionClick(section.id as Section)}
+                  initial={{ opacity: (hasSeenAnimation && !isReturning) ? 1 : 0, y: hasSeenAnimation ? 0 : 10 }}
                   animate={{
                     opacity: activeSection
                       ? (activeSection === section.id ? 1 : 0)
-                      : 1,
+                      : (isReturning ? 0 : 1), // Keep all nav buttons invisible during return
                     y: 0
                   }}
                   transition={{
                     opacity: {
-                      delay: activeSection ? 0 : (isReturning ? 1.4 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + (socialLinks.length - 1) * 0.1 + 0.5 + index * 0.15)),
+                      delay: activeSection ? 0 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + (socialLinks.length - 1) * 0.1 + 0.5 + index * 0.15),
                       duration: 0.5
                     },
                     y: {
-                      delay: hasSeenAnimation || isReturning ? 0 : (fullName.length + 1) * 0.1 + 0.3 + (socialLinks.length - 1) * 0.1 + 0.5 + index * 0.15,
+                      delay: hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + (socialLinks.length - 1) * 0.1 + 0.5 + index * 0.15,
                       duration: 0.5
                     },
                     layout: { duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96], delay: activeSection ? 0.5 : 0 }
@@ -383,8 +447,8 @@ export default function Home() {
                   whileHover={{ y: -2 }}
                   className="text-white text-lg hover:text-zinc-400 transition-colors cursor-pointer"
                   style={{
-                    pointerEvents: typingDone ? "auto" : "none",
-                    visibility: (isReturning && returningFrom === section.id) ? "hidden" : "visible"
+                    pointerEvents: typingDone ? "auto" : "none"
+                    // Removed visibility hidden - we control visibility with opacity for morph to work
                   }}
                 >
                   {section.name}
@@ -398,58 +462,59 @@ export default function Home() {
         )}
 
         {showContent && (
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {activeSection && (
               <motion.div
                 key={activeSection}
                 className="absolute inset-0 w-full min-h-screen bg-transparent flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto overflow-x-hidden"
               >
-            {/* Back button */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isExiting ? 0 : 1 }}
-              transition={{ duration: 0.3, delay: isExiting ? 0 : 1.5 }}
-              onClick={handleBack}
-              className="text-white text-sm hover:text-zinc-400 transition-colors mb-8 cursor-pointer"
-            >
-              ← back
-            </motion.p>
+                {/* Back button */}
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isExiting ? 0 : 1 }}
+                  transition={{ duration: 0.3, delay: isExiting ? 0 : 1.5 }}
+                  onClick={handleBack}
+                  className="text-white text-sm hover:text-zinc-400 transition-colors mb-8 cursor-pointer"
+                >
+                  ← back
+                </motion.p>
 
-            {/* Section header with layoutId matching the nav button */}
-            <motion.h1
-              layoutId={activeSection}
-              exit={{ opacity: 1 }}
-              transition={{
-                layout: {
-                  duration: 0.8,
-                  ease: [0.43, 0.13, 0.23, 0.96],
-                  delay: 0.5
-                }
-              }}
-              className="text-white text-5xl md:text-6xl font-light tracking-wide mb-12"
-            >
-              {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
-            </motion.h1>
+                {/* Section header with layoutId matching the nav button */}
+                <motion.h1
+                  layoutId={activeSection}
+                  exit={{ opacity: 1 }}
+                  transition={{
+                    layout: {
+                      duration: 0.8,
+                      ease: [0.43, 0.13, 0.23, 0.96],
+                      delay: 0.5
+                    }
+                  }}
+                  className="text-white text-5xl md:text-6xl font-light tracking-wide mb-12"
+                >
+                  {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
+                </motion.h1>
 
-            {/* Section content */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isExiting ? 0 : 1 }}
-              transition={{ duration: 0.3, delay: isExiting ? 0 : 1.5 }}
-            >
-              <AnimatePresence mode="wait">
-                {activeSection === "projects" && <ProjectsView key="projects" />}
-                {activeSection === "blog" && <BlogView key="blog" />}
-                {activeSection === "resume" && <ResumeView key="resume" />}
-                {activeSection === "notes" && <NotesView key="notes" />}
-                {activeSection === "shelf" && <ShelfView key="shelf" />}
-              </AnimatePresence>
-            </motion.div>
-          </motion.div>
+                {/* Section content */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isExiting ? 0 : 1 }}
+                  transition={{ duration: 0.3, delay: isExiting ? 0 : 1.5 }}
+                >
+                  <AnimatePresence mode="wait">
+                    {activeSection === "projects" && <ProjectsView key="projects" />}
+                    {activeSection === "blog" && <BlogView key="blog" />}
+                    {activeSection === "resume" && <ResumeView key="resume" />}
+                    {activeSection === "notes" && <NotesView key="notes" />}
+                    {activeSection === "shelf" && <ShelfView key="shelf" />}
+                  </AnimatePresence>
+                </motion.div>
+              </motion.div>
             )}
           </AnimatePresence>
         )}
       </AnimatePresence>
+      </LayoutGroup>
     </div>
   );
 }
