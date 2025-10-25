@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 
 // Types
 interface TimelineItem {
@@ -13,6 +13,8 @@ interface TimelineItem {
   type: 'current' | 'past-job' | 'education' | 'pct';
   description: string;
   location?: string;
+  shortTitle?: string; // Optional short name for narrow bars
+  url?: string; // Optional link to company/organization website
 }
 
 interface BarDimensions {
@@ -72,6 +74,8 @@ function formatDateRange(start: string, end: string | null): string {
 
 export default function ResumeView() {
   const [activeBar, setActiveBar] = useState<string | null>(null);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
+  const detailsRef = useRef<HTMLDivElement>(null);
 
   // Timeline data
   const timeline: TimelineItem[] = [
@@ -82,8 +86,9 @@ export default function ResumeView() {
       start: '2015-08',
       end: '2018-12',
       type: 'education',
-      description: 'Studied Finance while working multiple jobs to support education',
-      location: 'La Crosse, Wisconsin'
+      description: 'Bachelor of Science (B.S.), Finance\nMinor in Information Systems',
+      location: 'La Crosse, Wisconsin',
+      url: 'https://www.uwlax.edu'
     },
     {
       id: 'xanterra',
@@ -92,8 +97,10 @@ export default function ResumeView() {
       start: '2016-05',
       end: '2016-09',
       type: 'past-job',
-      description: 'Leading retail operations in Yellowstone National Park',
-      location: 'Yellowstone National Park'
+      description: 'Worked at the Old Faithful Inn gift shop and lived in employee housing within Yellowstone National Park.',
+      location: 'Yellowstone National Park',
+      shortTitle: 'XTC',
+      url: 'https://www.xanterra.com'
     },
     {
       id: 'ace',
@@ -102,7 +109,7 @@ export default function ResumeView() {
       start: '2016-10',
       end: '2019-04',
       type: 'past-job',
-      description: 'Warehouse operations and inventory management (concurrent with studies and internships)',
+      description: 'Managed warehouse operations and inventory for retail distribution center.',
       location: 'La Crosse, Wisconsin'
     },
     {
@@ -112,8 +119,10 @@ export default function ResumeView() {
       start: '2017-06',
       end: '2018-04',
       type: 'past-job',
-      description: 'Analyzing business processes and supporting data-driven decision making',
-      location: 'La Crosse-Onalaska Area'
+      description: 'Analyzed business processes and supported operational tasks. Found AutoHotKey at this internship and thought it was awesome. Got introduced to how SQL is used in a professional environment.',
+      location: 'La Crosse, Wisconsin',
+      shortTitle: 'LHI',
+      url: 'https://lhi.care/aboutoptumserve'
     },
     {
       id: 'sap',
@@ -122,8 +131,9 @@ export default function ResumeView() {
       start: '2018-04',
       end: '2019-04',
       type: 'past-job',
-      description: 'Supporting enterprise customers with technical product issues',
-      location: 'La Crosse, Wisconsin'
+      description: 'Supported enterprise customers with technical product issues.',
+      location: 'La Crosse, Wisconsin',
+      url: 'https://www.sap.com/index.html'
     },
     {
       id: 'pct',
@@ -132,8 +142,10 @@ export default function ResumeView() {
       start: '2019-05',
       end: '2019-10',
       type: 'pct',
-      description: 'Hiked approximately 2,100 miles of the Pacific Crest Trail, from the Mexican border through California and Oregon. An incredible journey of self-discovery and endurance.',
-      location: 'California, Oregon'
+      description: 'Thru-hiked about 2,100 miles from the Mexican border through California and Oregon. Was basically a homeless person.',
+      location: 'California, Oregon',
+      shortTitle: 'PCT',
+      url: 'https://en.wikipedia.org/wiki/Pacific_Crest_Trail'
     },
     {
       id: 'lively1',
@@ -142,8 +154,9 @@ export default function ResumeView() {
       start: '2019-10',
       end: '2021-03',
       type: 'past-job',
-      description: 'Supporting members with HSA and FSA account questions and troubleshooting',
-      location: 'San Francisco, California'
+      description: 'Helped account holders navigate their health benefit accounts, troubleshooting issues and answering questions.',
+      location: 'San Francisco, California',
+      url: 'https://livelyme.com'
     },
     {
       id: 'lively2',
@@ -152,8 +165,9 @@ export default function ResumeView() {
       start: '2021-03',
       end: '2022-08',
       type: 'past-job',
-      description: 'Providing technical support for HSA/FSA platform and benefits administration',
-      location: 'San Francisco, California'
+      description: 'Provided triage for the platform and bridged the gap between customer issues and engineering. Handled operational tasks manually, fixed bugs, and spent a ton of time with SQL and in a database.',
+      location: 'Remote',
+      url: 'https://livelyme.com'
     },
     {
       id: 'lively3',
@@ -162,8 +176,9 @@ export default function ResumeView() {
       start: '2022-08',
       end: null,
       type: 'current',
-      description: 'Leading technical support operations and mentoring team members',
-      location: 'San Francisco, California'
+      description: 'Same as before but now with \'Senior\' in the title. Leading triage efforts, mentoring team members, and still spending plenty of time with SQL and databases.',
+      location: 'Remote',
+      url: 'https://livelyme.com'
     }
   ];
 
@@ -172,13 +187,14 @@ export default function ResumeView() {
   const timelineEnd = new Date('2025-12-31');
   const totalDuration = timelineEnd.getTime() - timelineStart.getTime();
 
-  // Calculate bar dimensions
+  // Calculate bar dimensions (flipped: newest on left, oldest on right)
   const calculateBarDimensions = (start: string, end: string | null): BarDimensions => {
     const startDate = new Date(start);
     const endDate = end ? new Date(end) : new Date();
 
-    const leftPercent = ((startDate.getTime() - timelineStart.getTime()) / totalDuration) * 100;
     const widthPercent = ((endDate.getTime() - startDate.getTime()) / totalDuration) * 100;
+    // Flip the timeline: 100 - position of END date gives us left edge in reversed timeline
+    const leftPercent = 100 - ((endDate.getTime() - timelineStart.getTime()) / totalDuration) * 100;
 
     return { left: leftPercent, width: widthPercent };
   };
@@ -215,6 +231,12 @@ export default function ResumeView() {
       const dimensions = calculateBarDimensions(item.start, item.end);
       const barData: BarData = { ...item, dimensions, row: 0 };
       barData.row = calculateVerticalPosition(processedBars, barData);
+
+      // Manually move current job down one row
+      if (item.id === 'lively3') {
+        barData.row = 1;
+      }
+
       processedBars.push(barData);
     });
     return processedBars;
@@ -227,7 +249,7 @@ export default function ResumeView() {
 
   // Get bar style classes
   const getBarClassName = (type: string, isActive: boolean) => {
-    const baseClass = "absolute h-8 rounded cursor-pointer flex items-center px-3 text-sm font-light overflow-hidden whitespace-nowrap transition-all duration-300";
+    const baseClass = "absolute h-8 rounded cursor-pointer flex items-center justify-center px-3 text-sm font-light overflow-hidden whitespace-nowrap transition-all duration-300";
     const typeClass = {
       'current': 'bg-white text-black',
       'past-job': 'bg-zinc-600 text-white',
@@ -244,119 +266,132 @@ export default function ResumeView() {
     setActiveBar(activeBar === id ? null : id);
   };
 
+  const handleTimelineScroll = () => {
+    setShowSwipeHint(false);
+  };
+
+  // Auto-scroll to details panel on mobile when a bar is clicked
+  useEffect(() => {
+    if (activeBar && detailsRef.current) {
+      setTimeout(() => {
+        detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    }
+  }, [activeBar]);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{
-        opacity: { delay: 1.5, duration: 0.3 }
-      }}
-      className="w-full max-w-6xl"
-    >
-      <div>
-        {/* Experience Timeline */}
-        <div>
-          <h3 className="text-xl font-light text-white mb-8">Experience Timeline</h3>
+    <div className="w-screen -ml-8 px-4 md:px-24">
+      {/* Legend */}
+      <div className="flex gap-6 pb-6 mb-6 border-b border-zinc-800 flex-wrap justify-center">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-white"></div>
+          <span className="text-sm text-zinc-400">Current Role</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-zinc-600"></div>
+          <span className="text-sm text-zinc-400">Past Jobs</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-zinc-700"></div>
+          <span className="text-sm text-zinc-400">Education</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-gradient-to-br from-teal-500 to-cyan-500"></div>
+          <span className="text-sm text-zinc-400">Life</span>
+        </div>
+      </div>
 
-          {/* Legend */}
-          <div className="flex gap-6 pb-6 mb-6 border-b border-zinc-800 flex-wrap">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-white"></div>
-              <span className="text-sm text-zinc-400">Current Role</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-zinc-600"></div>
-              <span className="text-sm text-zinc-400">Past Jobs</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-zinc-700"></div>
-              <span className="text-sm text-zinc-400">Education</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-gradient-to-br from-teal-500 to-cyan-500"></div>
-              <span className="text-sm text-zinc-400">Life Milestones</span>
-            </div>
-          </div>
+      {/* Timeline container - scrollable on mobile */}
+      <div className="overflow-x-auto md:overflow-x-visible relative" onScroll={handleTimelineScroll}>
+        {/* Scroll hint - bottom center, mobile only */}
+        <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 text-zinc-400 text-sm md:hidden pointer-events-none pb-2 transition-opacity duration-200 ${showSwipeHint ? 'opacity-100' : 'opacity-0'}`}>
+          ← Swipe →
+        </div>
 
+        <div className="min-w-[1000px] md:min-w-0 scale-90 md:scale-100 origin-left">
           {/* Year Labels */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-            className="flex justify-between mb-5 px-2"
-          >
-            {[2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025].map((year, i) => (
+          <div className="flex justify-between mb-5">
+            {[2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015].map((year) => (
               <span key={year} className="text-zinc-500 text-xs font-light">
                 {year}
               </span>
             ))}
-          </motion.div>
+          </div>
 
           {/* Timeline Base Line */}
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.7, duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
-            className="h-0.5 bg-zinc-800 mb-10 origin-left"
-          />
+          <div className="h-0.5 bg-zinc-800 mb-10" />
 
           {/* Gantt Chart */}
           <div className="relative mb-10" style={{ height: `${ganttHeight}px` }}>
-            {bars.map((bar, index) => (
-              <motion.div
+            {bars.map((bar) => (
+              <div
                 key={bar.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  delay: 0.8,
-                  duration: 0.5
-                }}
                 className={getBarClassName(bar.type, activeBar === bar.id)}
                 style={{
                   left: `${bar.dimensions.left}%`,
                   width: `${bar.dimensions.width}%`,
-                  top: `${bar.row * 44}px`
+                  top: `${bar.row * 44}px`,
+                  fontSize: bar.shortTitle !== undefined ? '0.75rem' : undefined
                 }}
                 onClick={() => handleBarClick(bar.id)}
               >
-                {bar.title}
-              </motion.div>
+                {bar.shortTitle !== undefined ? bar.shortTitle : bar.title}
+              </div>
             ))}
           </div>
         </div>
-
-        {/* Details Panel - FIXED HEIGHT CONTAINER */}
-        <div className="relative" style={{ height: '300px', marginTop: '40px' }}>
-          <motion.div
-            initial={false}
-            animate={{
-              opacity: activeItem ? 1 : 0,
-            }}
-            transition={{ duration: 0.3 }}
-            className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 overflow-auto h-full"
-            style={{ visibility: activeItem ? 'visible' : 'hidden' }}
-          >
-            {activeItem && (
-              <div>
-                <h3 className="text-white text-2xl font-normal mb-2">{activeItem.title}</h3>
-                <h4 className="text-zinc-400 text-lg font-light mb-4">{activeItem.subtitle}</h4>
-                <div className="text-zinc-500 text-sm mb-2">
-                  {formatDateRange(activeItem.start, activeItem.end)} ·{' '}
-                  {calculateDuration(new Date(activeItem.start), activeItem.end ? new Date(activeItem.end) : null)}
-                </div>
-                {activeItem.location && (
-                  <div className="text-zinc-500 text-sm mb-4">{activeItem.location}</div>
-                )}
-                <div className="text-zinc-300 text-base italic leading-relaxed">
-                  {activeItem.description}
-                </div>
-              </div>
-            )}
-          </motion.div>
-        </div>
-
       </div>
-    </motion.div>
+
+      {/* Details Panel */}
+      <div ref={detailsRef} className="mt-10 relative min-h-[150px]">
+        <AnimatePresence mode="wait">
+          {activeItem ? (
+            <motion.div
+              key="details"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-zinc-900 border border-zinc-800 rounded-lg p-8"
+            >
+              {activeItem.url ? (
+                <a
+                  href={activeItem.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white text-2xl font-normal mb-2 block hover:text-zinc-300 transition-colors underline-offset-4 hover:underline"
+                >
+                  <h3>{activeItem.title}</h3>
+                </a>
+              ) : (
+                <h3 className="text-white text-2xl font-normal mb-2">{activeItem.title}</h3>
+              )}
+              <h4 className="text-zinc-400 text-lg font-light mb-4">{activeItem.subtitle}</h4>
+              <div className="text-zinc-500 text-sm mb-2">
+                {formatDateRange(activeItem.start, activeItem.end)} ·{' '}
+                {calculateDuration(new Date(activeItem.start), activeItem.end ? new Date(activeItem.end) : null)}
+              </div>
+              {activeItem.location && (
+                <div className="text-zinc-500 text-sm mb-4">{activeItem.location}</div>
+              )}
+              <div className="text-zinc-300 text-base italic leading-relaxed">
+                {activeItem.description}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="placeholder"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="border-2 border-dashed border-zinc-700 rounded-lg p-8 flex items-center justify-center min-h-[150px]"
+            >
+              <p className="text-zinc-500 text-center">Click a bar to view details</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
   );
 }

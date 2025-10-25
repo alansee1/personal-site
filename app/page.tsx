@@ -433,6 +433,7 @@ export default function Home() {
 
             {/* Section content */}
             <motion.div
+              initial={{ opacity: 0 }}
               animate={{ opacity: isExiting ? 0 : 1 }}
               transition={{ duration: 0.3, delay: isExiting ? 0 : 1.5 }}
             >
