@@ -183,27 +183,7 @@ If approved:
 - Maintain consistent formatting
 - Add entry at the end (before any footer if present)
 
-## Step 7: Git Operations
-
-After successfully updating the file:
-
-```bash
-# Add the diary file
-git add DEV_DIARY.md
-
-# Create commit
-git commit -m "Add dev diary: Session X - [Title]"
-
-# Push to remote
-git push
-```
-
-**Error Handling:**
-- If git operations fail, report the error and stop
-- If there are conflicts, tell user to pull first
-- If push fails, report error but don't rollback file changes
-
-## Step 8: Success Confirmation
+## Step 7: Success Confirmation
 
 Report:
 ```
@@ -211,8 +191,9 @@ Report:
 
 Session X - [Title]
 - XX stats updated
-- Committed and pushed to GitHub
 - Entry available at: ./DEV_DIARY.md#session-x
+
+Note: DEV_DIARY.md is for local reference only and is not committed to git.
 ```
 
 ## Writing Guidelines
@@ -281,6 +262,7 @@ Made a new slash command that works."
 
 - This command is **personal-site specific** - it only works in this repo
 - The command file lives in `.claude/commands/` and is git-tracked
+- **DEV_DIARY.md is for local reference only and is NOT committed to git**
 - Multiple `/dev-diary` calls per session are supported via checkpoint logic
 - Each diary entry should be substantial (not for tiny tweaks)
 - Focus on documenting the "why" and "how we got here", not just the "what"
