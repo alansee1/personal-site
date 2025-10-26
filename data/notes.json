@@ -1,5 +1,11 @@
 [
   {
+    "timestamp": "2025-10-26T08:15:00Z",
+    "projectId": "personal-site",
+    "summary": "Fixed Notes table horizontal scroll on mobile",
+    "tags": ["bug-fix", "mobile", "ui"]
+  },
+  {
     "timestamp": "2025-10-26T07:45:00Z",
     "projectId": "personal-site",
     "summary": "Fixed Resume section UX bugs and made timeline future-proof",
