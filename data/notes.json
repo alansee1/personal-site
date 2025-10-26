@@ -1,5 +1,11 @@
 [
   {
+    "timestamp": "2025-10-25T21:40:00Z",
+    "projectId": "ai-art",
+    "summary": "Set up local Stable Diffusion with M3 GPU support and CLI generator",
+    "tags": ["setup", "python", "ai", "stable-diffusion"]
+  },
+  {
     "timestamp": "2025-10-25T20:30:00Z",
     "projectId": "personal-site",
     "summary": "Fixed layout shifting bug in Resume timeline and added mobile optimizations with horizontal scroll",
