@@ -3,7 +3,7 @@
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import ProjectsView from "@/components/ProjectsView";
 import BlogView from "@/components/BlogView";
 import ResumeView from "@/components/ResumeView";
@@ -13,7 +13,6 @@ import { ENTRY_TIMING, NAV_TIMING, EASINGS } from "@/lib/animations";
 
 export default function Home() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   // Track if component has mounted on client (prevents hydration mismatch)
   const [mounted, setMounted] = useState(false);
@@ -260,43 +259,51 @@ export default function Home() {
 
   // Watch for return navigation via URL params (from SectionLayout back buttons)
   useEffect(() => {
-    if (!searchParams) return;
+    if (!mounted || typeof window === 'undefined') return;
 
-    const isReturning = searchParams.get('returning') === 'true';
-    const fromSection = searchParams.get('from') as SectionType;
-    const isFromDirect = searchParams.get('fromDirect') === 'true';
+    const checkForReturnNavigation = () => {
+      const params = new URLSearchParams(window.location.search);
+      const isReturning = params.get('returning') === 'true';
+      const fromSection = params.get('from') as SectionType;
+      const isFromDirect = params.get('fromDirect') === 'true';
 
-    if (isReturning && fromSection && mounted) {
-      // Reset hideMorphedButton to ensure button is visible for morph
-      setHideMorphedButton(true);
-      setActiveSection(fromSection);
-      setReturningFrom(fromSection);
-      setIsExiting(false);
-      setIsReturning(true);
+      if (isReturning && fromSection) {
+        // Reset hideMorphedButton to ensure button is visible for morph
+        setHideMorphedButton(true);
+        setActiveSection(fromSection);
+        setReturningFrom(fromSection);
+        setIsExiting(false);
+        setIsReturning(true);
 
-      // Clean URL
-      window.history.replaceState({}, '', '/');
+        // Clean URL
+        window.history.replaceState({}, '', '/');
 
-      // Start return animation
-      requestAnimationFrame(() => {
+        // Start return animation
         requestAnimationFrame(() => {
-          setHideMorphedButton(false); // Show for morph
-          setIsExiting(true);
-
-          setTimeout(() => {
-            setActiveSection(null);
-            setIsExiting(false);
+          requestAnimationFrame(() => {
+            setHideMorphedButton(false); // Show for morph
+            setIsExiting(true);
 
             setTimeout(() => {
-              setIsReturning(false);
-              setReturningFrom(null);
-              setTypingDone(true);
-            }, NAV_TIMING.HOME_FADE_IN_DELAY);
-          }, NAV_TIMING.CONTENT_FADE_OUT);
+              setActiveSection(null);
+              setIsExiting(false);
+
+              setTimeout(() => {
+                setIsReturning(false);
+                setReturningFrom(null);
+                setTypingDone(true);
+              }, NAV_TIMING.HOME_FADE_IN_DELAY);
+            }, NAV_TIMING.CONTENT_FADE_OUT);
+          });
         });
-      });
-    }
-  }, [searchParams, mounted]);
+      }
+    };
+
+    // Check on mount and when URL changes
+    checkForReturnNavigation();
+    window.addEventListener('popstate', checkForReturnNavigation);
+    return () => window.removeEventListener('popstate', checkForReturnNavigation);
+  }, [mounted]);
 
   // Handle browser back/forward buttons
   useEffect(() => {
