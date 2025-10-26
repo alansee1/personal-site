@@ -21,31 +21,23 @@ export default function SectionLayout({ title, children }: SectionLayoutProps) {
     <div className="min-h-screen bg-black text-white">
       <div className="w-full min-h-screen flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto overflow-x-hidden">
         {/* Back button */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+        <p
           onClick={handleBack}
           className="text-white text-sm hover:text-zinc-400 transition-colors mb-8 cursor-pointer"
         >
           ← back
-        </motion.p>
+        </p>
 
         {/* Section header */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-white text-5xl md:text-6xl font-light tracking-wide mb-12"
-        >
+        <h1 className="text-white text-5xl md:text-6xl font-light tracking-wide mb-12">
           {title}
-        </motion.h1>
+        </h1>
 
         {/* Section content */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
           className="w-full"
         >
           {children}

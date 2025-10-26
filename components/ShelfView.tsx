@@ -12,11 +12,11 @@ export default function ShelfView() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       transition={{
-        opacity: { delay: 1.5, duration: 0.3 }
+        opacity: { duration: 0.3 }
       }}
       className="w-full max-w-4xl"
     >
@@ -24,9 +24,9 @@ export default function ShelfView() {
         {items.map((item, index) => (
           <motion.div
             key={item.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 + index * 0.1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
             className="border border-zinc-800 rounded p-4"
           >
             <p className="text-xs text-zinc-500 mb-1">{item.type}</p>

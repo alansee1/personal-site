@@ -1,64 +1,67 @@
 "use client";
 
-import { motion } from "framer-motion";
+import Link from "next/link";
+import projectsData from "@/data/projects.json";
 
 export default function ProjectsView() {
-  const projects = [
-    {
-      title: "Personal Website",
-      description: "A minimalist portfolio with cinematic entrance animation",
-      tech: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],
-      year: "2025"
-    },
-    {
-      title: "Cool Project #2",
-      description: "Brief description of what this project does",
-      tech: ["React", "Node.js", "MongoDB"],
-      year: "2024"
-    },
-    {
-      title: "Interesting Side Project",
-      description: "Another awesome project you built",
-      tech: ["Python", "FastAPI", "PostgreSQL"],
-      year: "2024"
-    },
-  ];
+  // Get status badge color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "bg-emerald-900/30 text-emerald-300 border-emerald-800";
+      case "completed":
+        return "bg-blue-900/30 text-blue-300 border-blue-800";
+      case "paused":
+        return "bg-zinc-700/30 text-zinc-400 border-zinc-600";
+      default:
+        return "bg-zinc-800 text-zinc-300 border-zinc-700";
+    }
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{
-        opacity: { delay: 1.5, duration: 0.3 }
-      }}
-      className="w-full max-w-4xl"
-    >
-      <div className="space-y-8">
-        {projects.map((project, index) => (
-          <motion.div
-            key={project.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 + index * 0.1 }}
-            className="border-b border-zinc-800 pb-8"
-          >
-            <h3 className="text-2xl font-light text-white mb-2">{project.title}</h3>
-            <p className="text-zinc-400 mb-3">{project.description}</p>
-            <div className="flex gap-2 flex-wrap mb-3">
-              {project.tech.map((t) => (
-                <span
-                  key={t}
-                  className="text-xs px-2 py-1 bg-zinc-900 text-zinc-300 rounded"
-                >
-                  {t}
+    <div className="w-full max-w-4xl">
+      <div className="space-y-6">
+        {projectsData.map((project, index) => (
+          <Link key={project.id} href={`/projects/${project.id}`}>
+            <div className="border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-all cursor-pointer hover:bg-zinc-900/30">
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-2xl font-light text-white">{project.title}</h3>
+                <span className={`text-xs px-2 py-1 rounded border capitalize ${getStatusColor(project.status)}`}>
+                  {project.status}
                 </span>
-              ))}
+              </div>
+
+              <p className="text-zinc-400 mb-4">{project.description}</p>
+
+              <div className="flex gap-2 flex-wrap mb-4">
+                {project.tech.map((t) => (
+                  <span
+                    key={t}
+                    className="text-xs px-2 py-1 bg-zinc-900 text-zinc-300 rounded"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+
+              <div className="flex gap-4 text-xs text-zinc-500">
+                {project.url && (
+                  <span className="flex items-center gap-1">
+                    <span>🔗</span>
+                    <span>Live site</span>
+                  </span>
+                )}
+                {project.github && (
+                  <span className="flex items-center gap-1">
+                    <span>📦</span>
+                    <span>GitHub</span>
+                  </span>
+                )}
+              </div>
             </div>
-            <p className="text-xs text-zinc-500">{project.year}</p>
-          </motion.div>
+          </Link>
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 }

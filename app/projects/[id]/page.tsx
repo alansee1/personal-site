@@ -1,0 +1,162 @@
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import projectsData from "@/data/projects.json";
+import notesData from "@/data/notes.json";
+
+interface ProjectPageProps {
+  params: Promise<{ id: string }>;
+}
+
+// Generate static params for all projects
+export async function generateStaticParams() {
+  return projectsData.map((project) => ({
+    id: project.id,
+  }));
+}
+
+// Generate metadata for each project
+export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const project = projectsData.find((p) => p.id === id);
+
+  if (!project) {
+    return {
+      title: "Project Not Found - Alan See",
+    };
+  }
+
+  return {
+    title: `${project.title} - Alan See`,
+    description: project.description,
+    keywords: [project.title, ...project.tech, "Alan See", "project"],
+    openGraph: {
+      title: `${project.title} - Alan See`,
+      description: project.description,
+      url: `https://alansee.dev/projects/${project.id}`,
+      type: "website",
+    },
+  };
+}
+
+export default async function ProjectPage({ params }: ProjectPageProps) {
+  const { id } = await params;
+  const project = projectsData.find((p) => p.id === id);
+
+  if (!project) {
+    notFound();
+  }
+
+  // Get all notes related to this project
+  const projectNotes = notesData.filter((note) => note.projectId === project.id);
+
+  // Get status badge color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "bg-emerald-900/30 text-emerald-300 border-emerald-800";
+      case "completed":
+        return "bg-blue-900/30 text-blue-300 border-blue-800";
+      case "paused":
+        return "bg-zinc-700/30 text-zinc-400 border-zinc-600";
+      default:
+        return "bg-zinc-800 text-zinc-300 border-zinc-700";
+    }
+  };
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <div className="w-full min-h-screen flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto overflow-x-hidden">
+        {/* Back button */}
+        <Link
+          href="/projects"
+          className="text-white text-sm hover:text-zinc-400 transition-colors mb-8 cursor-pointer"
+        >
+          ← back
+        </Link>
+
+        {/* Project Header */}
+        <div className="flex items-start justify-between mb-6 w-full max-w-4xl">
+          <h1 className="text-5xl md:text-6xl font-light tracking-wide text-white">{project.title}</h1>
+          <span className={`text-xs px-3 py-1.5 rounded border capitalize ${getStatusColor(project.status)}`}>
+            {project.status}
+          </span>
+        </div>
+
+        <div className="w-full max-w-4xl mb-12">
+
+        <p className="text-xl text-zinc-400 mb-8 leading-relaxed">{project.description}</p>
+
+        {/* Tech Stack */}
+        <div className="mb-8">
+          <h2 className="text-sm text-zinc-500 uppercase tracking-wider mb-3">Tech Stack</h2>
+          <div className="flex gap-2 flex-wrap">
+            {project.tech.map((tech) => (
+              <span
+                key={tech}
+                className="text-sm px-3 py-1.5 bg-zinc-900 text-zinc-300 rounded border border-zinc-800"
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Links */}
+        {(project.url || project.github) && (
+          <div className="flex gap-4 mb-12">
+            {project.url && (
+              <a
+                href={project.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-white text-black rounded hover:bg-zinc-200 transition-colors text-sm font-medium"
+              >
+                View Live Site →
+              </a>
+            )}
+            {project.github && (
+              <a
+                href={project.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 border border-zinc-700 text-white rounded hover:border-zinc-500 transition-colors text-sm"
+              >
+                View on GitHub →
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Work Log / Notes */}
+      {projectNotes.length > 0 && (
+        <div className="w-full max-w-4xl mb-12">
+          <h2 className="text-2xl font-light text-white mb-6">Work Log</h2>
+          <div className="space-y-4">
+            {projectNotes.map((note, index) => (
+              <div
+                key={`${note.timestamp}-${index}`}
+                className="border-l-2 border-zinc-800 pl-4 py-2"
+              >
+                <p className="text-xs text-zinc-500 mb-1">{formatDate(note.timestamp)}</p>
+                <p className="text-zinc-300">{note.summary}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      </div>
+    </div>
+  );
+}

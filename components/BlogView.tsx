@@ -23,11 +23,11 @@ export default function BlogView() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       transition={{
-        opacity: { delay: 1.5, duration: 0.3 }
+        opacity: { duration: 0.3 }
       }}
       className="w-full max-w-4xl"
     >
@@ -35,9 +35,9 @@ export default function BlogView() {
         {posts.map((post, index) => (
           <motion.div
             key={post.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 + index * 0.1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
             className="border-b border-zinc-800 pb-8 cursor-pointer hover:opacity-80 transition-opacity"
           >
             <h3 className="text-xl font-light text-white mb-1">{post.title}</h3>

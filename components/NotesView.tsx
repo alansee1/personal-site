@@ -1,38 +1,275 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState, useMemo } from "react";
+import notesData from "@/data/notes.json";
+import projectsData from "@/data/projects.json";
+
+type SortField = "time" | "project";
+type SortDirection = "asc" | "desc";
 
 export default function NotesView() {
-  const notes = [
-    { date: "Oct 22, 2025", content: "Today I learned about Framer Motion's layout animations - super powerful!" },
-    { date: "Oct 20, 2025", content: "Finished the entrance animation. It took 6+ iterations to get right." },
-    { date: "Oct 18, 2025", content: "Started building the personal website project. Minimalist black/white theme." },
-  ];
+  const ITEMS_PER_PAGE = 20;
+
+  // State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortField, setSortField] = useState<SortField>("time");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  // Create a map of project IDs to project info for easy lookup
+  const projectsMap = new Map(
+    projectsData.map((project) => [project.id, project])
+  );
+
+  // Format timestamp to relative time or date
+  const formatRelativeTime = (timestamp: string) => {
+    const now = new Date();
+    const date = new Date(timestamp);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    // Less than 1 hour: "X minutes ago"
+    if (diffMins < 60) {
+      if (diffMins < 1) return "just now";
+      return diffMins === 1 ? "1 minute ago" : `${diffMins} minutes ago`;
+    }
+
+    // Less than 24 hours: "X hours ago"
+    if (diffHours < 24) {
+      return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
+    }
+
+    // Less than 7 days: "X days ago"
+    if (diffDays < 7) {
+      return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
+    }
+
+    // Older: Show formatted date
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Handle sort
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection(field === "time" ? "desc" : "asc");
+    }
+  };
+
+  // Handle tag filter
+  const toggleTag = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter((t) => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+    setCurrentPage(1); // Reset to page 1
+  };
+
+  // Filter and sort data
+  const filteredAndSortedNotes = useMemo(() => {
+    let filtered = [...notesData];
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter((note) =>
+        note.summary.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Filter by project
+    if (selectedProject) {
+      filtered = filtered.filter((note) => note.projectId === selectedProject);
+    }
+
+    // Filter by tags
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter((note) =>
+        selectedTags.every((tag) => note.tags.includes(tag))
+      );
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      if (sortField === "time") {
+        const timeA = new Date(a.timestamp).getTime();
+        const timeB = new Date(b.timestamp).getTime();
+        return sortDirection === "asc" ? timeA - timeB : timeB - timeA;
+      } else {
+        const projectA = projectsMap.get(a.projectId)?.title || "";
+        const projectB = projectsMap.get(b.projectId)?.title || "";
+        return sortDirection === "asc"
+          ? projectA.localeCompare(projectB)
+          : projectB.localeCompare(projectA);
+      }
+    });
+
+    return filtered;
+  }, [searchQuery, selectedProject, selectedTags, sortField, sortDirection, projectsMap]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAndSortedNotes.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedNotes = filteredAndSortedNotes.slice(startIndex, endIndex);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{
-        opacity: { delay: 1.5, duration: 0.3 }
-      }}
-      className="w-full max-w-4xl"
-    >
-      <div className="space-y-6">
-        {notes.map((note, index) => (
-          <motion.div
-            key={note.date}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 + index * 0.1 }}
-            className="border-b border-zinc-800 pb-6"
+    <div className="w-full max-w-6xl space-y-6">
+      {/* Filters */}
+      <div className="space-y-4">
+        {/* Search and Project Filter */}
+        <div className="flex gap-4">
+          <input
+            type="text"
+            placeholder="Search notes..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="flex-1 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-zinc-700"
+          />
+          <select
+            value={selectedProject || ""}
+            onChange={(e) => {
+              setSelectedProject(e.target.value || null);
+              setCurrentPage(1);
+            }}
+            className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-300 focus:outline-none focus:border-zinc-700"
           >
-            <p className="text-xs text-zinc-500 mb-2">{note.date}</p>
-            <p className="text-zinc-300">{note.content}</p>
-          </motion.div>
-        ))}
+            <option value="">All Projects</option>
+            {projectsData.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.title}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Active Tag Filters */}
+        {selectedTags.length > 0 && (
+          <div className="flex gap-2 items-center">
+            <span className="text-xs text-zinc-500">Active filters:</span>
+            {selectedTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => toggleTag(tag)}
+                className="text-xs px-2 py-1 bg-zinc-800 text-zinc-300 rounded border border-zinc-700 hover:bg-zinc-700 transition-colors flex items-center gap-1.5"
+              >
+                {tag}
+                <span className="text-zinc-500">×</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-    </motion.div>
+
+      {/* Table */}
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-zinc-800 text-left">
+            <th
+              className="pb-3 pr-6 font-normal text-zinc-500 text-xs uppercase tracking-wider cursor-pointer hover:text-zinc-400 transition-colors"
+              onClick={() => handleSort("time")}
+            >
+              Time {sortField === "time" && (sortDirection === "asc" ? "↑" : "↓")}
+            </th>
+            <th
+              className="pb-3 pr-6 font-normal text-zinc-500 text-xs uppercase tracking-wider cursor-pointer hover:text-zinc-400 transition-colors"
+              onClick={() => handleSort("project")}
+            >
+              Project {sortField === "project" && (sortDirection === "asc" ? "↑" : "↓")}
+            </th>
+            <th className="pb-3 pr-6 font-normal text-zinc-500 text-xs uppercase tracking-wider">Summary</th>
+            <th className="pb-3 font-normal text-zinc-500 text-xs uppercase tracking-wider">Tags</th>
+          </tr>
+        </thead>
+        <tbody>
+          {paginatedNotes.map((note, index) => {
+            const project = projectsMap.get(note.projectId);
+
+            return (
+              <tr
+                key={`${note.timestamp}-${index}`}
+                className="border-b border-zinc-800/50 hover:bg-zinc-900/30 transition-colors"
+              >
+                <td className="py-3 pr-6 text-zinc-500 whitespace-nowrap align-top">
+                  {formatRelativeTime(note.timestamp)}
+                </td>
+                <td className="py-3 pr-6 text-zinc-400 whitespace-nowrap align-top">
+                  {project?.title || '-'}
+                </td>
+                <td className="py-3 pr-6 text-zinc-300 align-top">
+                  {note.summary}
+                </td>
+                <td className="py-3 align-top">
+                  {note.tags && note.tags.length > 0 && (
+                    <div className="flex gap-1.5 flex-wrap">
+                      {note.tags.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => toggleTag(tag)}
+                          className="text-xs px-2 py-0.5 bg-zinc-900 text-zinc-400 rounded border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer"
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+        <div className="text-sm text-zinc-500">
+          Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedNotes.length)} of {filteredAndSortedNotes.length} notes
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-zinc-400 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+          >
+            Previous
+          </button>
+          <div className="flex gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-3 py-1 rounded text-sm transition-colors ${
+                  currentPage === page
+                    ? "bg-white text-black"
+                    : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:bg-zinc-800"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-zinc-400 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
