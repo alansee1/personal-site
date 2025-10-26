@@ -21,7 +21,7 @@
   },
   {
     "id": "ai-art",
-    "title": "ai-art",
+    "title": "AI Art",
     "description": "AI-powered art generation using Stable Diffusion on M3 Mac",
     "status": "active",
     "tech": ["Python", "Stable Diffusion", "Hugging Face"],

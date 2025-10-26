@@ -1,6 +1,9 @@
-import { Metadata } from "next";
+"use client";
+
+import React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import projectsData from "@/data/projects.json";
 import notesData from "@/data/notes.json";
 
@@ -8,39 +11,8 @@ interface ProjectPageProps {
   params: Promise<{ id: string }>;
 }
 
-// Generate static params for all projects
-export async function generateStaticParams() {
-  return projectsData.map((project) => ({
-    id: project.id,
-  }));
-}
-
-// Generate metadata for each project
-export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
-  const { id } = await params;
-  const project = projectsData.find((p) => p.id === id);
-
-  if (!project) {
-    return {
-      title: "Project Not Found - Alan See",
-    };
-  }
-
-  return {
-    title: `${project.title} - Alan See`,
-    description: project.description,
-    keywords: [project.title, ...project.tech, "Alan See", "project"],
-    openGraph: {
-      title: `${project.title} - Alan See`,
-      description: project.description,
-      url: `https://alansee.dev/projects/${project.id}`,
-      type: "website",
-    },
-  };
-}
-
-export default async function ProjectPage({ params }: ProjectPageProps) {
-  const { id } = await params;
+export default function ProjectPage({ params }: ProjectPageProps) {
+  const { id } = React.use(params);
   const project = projectsData.find((p) => p.id === id);
 
   if (!project) {
@@ -86,14 +58,24 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
         </Link>
 
         {/* Project Header */}
-        <div className="flex items-start justify-between mb-6 w-full max-w-4xl">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="flex items-start justify-between mb-6 w-full max-w-4xl"
+        >
           <h1 className="text-5xl md:text-6xl font-light tracking-wide text-white">{project.title}</h1>
           <span className={`text-xs px-3 py-1.5 rounded border capitalize ${getStatusColor(project.status)}`}>
             {project.status}
           </span>
-        </div>
+        </motion.div>
 
-        <div className="w-full max-w-4xl mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="w-full max-w-4xl mb-12"
+        >
 
         <p className="text-xl text-zinc-400 mb-8 leading-relaxed">{project.description}</p>
 
@@ -137,11 +119,16 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             )}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Work Log / Notes */}
       {projectNotes.length > 0 && (
-        <div className="w-full max-w-4xl mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="w-full max-w-4xl mb-12"
+        >
           <h2 className="text-2xl font-light text-white mb-6">Work Log</h2>
           <div className="space-y-4">
             {projectNotes.map((note, index) => (
@@ -154,7 +141,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
       </div>
     </div>
