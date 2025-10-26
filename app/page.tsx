@@ -3,15 +3,17 @@
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import ProjectsView from "@/components/ProjectsView";
 import BlogView from "@/components/BlogView";
 import ResumeView from "@/components/ResumeView";
 import NotesView from "@/components/NotesView";
 import ShelfView from "@/components/ShelfView";
+import { ENTRY_TIMING, NAV_TIMING, EASINGS } from "@/lib/animations";
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Track if component has mounted on client (prevents hydration mismatch)
   const [mounted, setMounted] = useState(false);
@@ -38,6 +40,8 @@ export default function Home() {
   const [returningFrom, setReturningFrom] = useState<SectionType>(null);
   const [isExiting, setIsExiting] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false); // Animation lock
+  const [hideMorphedButton, setHideMorphedButton] = useState(false); // Hide button after morph completes
 
   // Mark component as mounted and check sessionStorage (runs first, prevents hydration mismatch)
   useEffect(() => {
@@ -64,6 +68,7 @@ export default function Home() {
         // For direct routes, we need to establish the layout connection first
         setActiveSection(fromSection);
         setReturningFrom(fromSection);
+        setHideMorphedButton(true); // Hide the button since we're in the section
         setIsExiting(false); // Start with section fully visible
         setIsReturning(true); // Mark as returning to hide ALL homepage elements
 
@@ -74,6 +79,7 @@ export default function Home() {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             // Now start the exit sequence
+            setHideMorphedButton(false); // Show button for morph
             setIsExiting(true);
 
             // Wait for content to fade out
@@ -94,6 +100,7 @@ export default function Home() {
         // For state-based navigation (from sessionStorage flag)
         setActiveSection(fromSection);
         setReturningFrom(fromSection);
+        setHideMorphedButton(false); // Button should be visible for morph
         setIsExiting(true);
         setIsReturning(true);
         setTypingDone(false); // Ensure homepage is hidden initially
@@ -205,14 +212,28 @@ export default function Home() {
 
   // Section navigation handlers
   const handleSectionClick = (section: SectionType) => {
+    if (isAnimating) return; // Prevent clicks during animation
+
+    setIsAnimating(true);
+    setHideMorphedButton(false); // Reset before new animation
     setActiveSection(section);
     // Mark that we're using state-based navigation
     sessionStorage.setItem('inStateNavigation', 'true');
     // Update URL without navigation (for bookmarking/sharing)
     window.history.pushState({}, '', `/${section}`);
+
+    // Hide the morphed button after morph completes (add 100ms buffer for easing)
+    setTimeout(() => setHideMorphedButton(true), NAV_TIMING.MORPH_DELAY + NAV_TIMING.MORPH_DURATION + 100);
+
+    // Release lock after section entry completes
+    setTimeout(() => setIsAnimating(false), NAV_TIMING.SECTION_ENTRY_DELAY + 500);
   };
 
   const handleBack = () => {
+    if (isAnimating) return; // Prevent clicks during animation
+
+    setIsAnimating(true);
+    setHideMorphedButton(false); // Show button for return morph
     // Store the section we're returning from
     const currentSection = activeSection;
     setReturningFrom(currentSection);
@@ -222,20 +243,60 @@ export default function Home() {
     // Update URL back to homepage
     window.history.pushState({}, '', '/');
 
-    // Wait for content to fade out (0.3s), then trigger the morph
+    // Wait for content to fade out, then trigger the morph
     setTimeout(() => {
       setActiveSection(null);
       setIsExiting(false);
 
       // Clear returning flag after morph animation completes
-      // Morph has 0.8s duration, home elements fade in at 1.4s
       setTimeout(() => {
         setIsReturning(false);
         setReturningFrom(null);
         sessionStorage.removeItem('inStateNavigation');
-      }, 1400); // Wait for morph to complete
-    }, 300);
+        setIsAnimating(false); // Release lock
+      }, NAV_TIMING.HOME_FADE_IN_DELAY);
+    }, NAV_TIMING.CONTENT_FADE_OUT);
   };
+
+  // Watch for return navigation via URL params (from SectionLayout back buttons)
+  useEffect(() => {
+    if (!searchParams) return;
+
+    const isReturning = searchParams.get('returning') === 'true';
+    const fromSection = searchParams.get('from') as SectionType;
+    const isFromDirect = searchParams.get('fromDirect') === 'true';
+
+    if (isReturning && fromSection && mounted) {
+      // Reset hideMorphedButton to ensure button is visible for morph
+      setHideMorphedButton(true);
+      setActiveSection(fromSection);
+      setReturningFrom(fromSection);
+      setIsExiting(false);
+      setIsReturning(true);
+
+      // Clean URL
+      window.history.replaceState({}, '', '/');
+
+      // Start return animation
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setHideMorphedButton(false); // Show for morph
+          setIsExiting(true);
+
+          setTimeout(() => {
+            setActiveSection(null);
+            setIsExiting(false);
+
+            setTimeout(() => {
+              setIsReturning(false);
+              setReturningFrom(null);
+              setTypingDone(true);
+            }, NAV_TIMING.HOME_FADE_IN_DELAY);
+          }, NAV_TIMING.CONTENT_FADE_OUT);
+        });
+      });
+    }
+  }, [searchParams, mounted]);
 
   // Handle browser back/forward buttons
   useEffect(() => {
@@ -256,6 +317,7 @@ export default function Home() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [activeSection]);
+
 
   const socialLinks = [
     { name: "TikTok", icon: "fa6-brands:tiktok", href: "#" },
@@ -429,13 +491,13 @@ export default function Home() {
                   initial={{ opacity: (hasSeenAnimation && !isReturning) ? 1 : 0, y: hasSeenAnimation ? 0 : 10 }}
                   animate={{
                     opacity: activeSection
-                      ? (activeSection === section.id ? 1 : 0)
+                      ? (activeSection === section.id ? 1 : 0)  // Active button stays visible for morph, others fade immediately
                       : (returningFrom === section.id ? 0 : 1), // Keep selected button hidden during entire return
                     y: 0
                   }}
                   transition={{
                     opacity: {
-                      delay: activeSection ? 0 : (isReturning ? 1.4 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + (socialLinks.length - 1) * 0.1 + 0.5 + index * 0.15)),
+                      delay: activeSection ? 0 : (isReturning ? NAV_TIMING.HOME_FADE_IN_DELAY / 1000 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + (socialLinks.length - 1) * 0.1 + 0.5 + index * 0.15)),
                       duration: 0.5
                     },
                     y: {
@@ -447,8 +509,8 @@ export default function Home() {
                   whileHover={{ y: -2 }}
                   className="text-white text-lg hover:text-zinc-400 transition-colors cursor-pointer"
                   style={{
-                    pointerEvents: typingDone ? "auto" : "none",
-                    visibility: (returningFrom === section.id) ? "hidden" : "visible"
+                    pointerEvents: (typingDone && !isAnimating) ? "auto" : "none",
+                    visibility: (returningFrom === section.id || (activeSection === section.id && hideMorphedButton)) ? "hidden" : "visible"
                   }}
                 >
                   {section.name}
