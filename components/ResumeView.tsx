@@ -176,22 +176,23 @@ export default function ResumeView() {
       start: '2022-08',
       end: null,
       type: 'current',
-      description: 'Same as before but now with \'Senior\' in the title. Leading triage efforts, mentoring team members, and still spending plenty of time with SQL and databases.',
+      description: 'Leading triage efforts for platform issues, bridging the gap between customer needs and engineering solutions. Mentoring team members, fixing bugs, handling operational tasks, and spending plenty of time with SQL and databases.',
       location: 'Remote',
       url: 'https://livelyme.com'
     }
   ];
 
-  // Timeline span
+  // Timeline span - dynamically extends to current year
   const timelineStart = new Date('2015-01-01');
-  const timelineEnd = new Date('2025-12-31');
+  const currentYear = new Date().getFullYear();
+  const timelineEnd = new Date(`${currentYear}-12-31`);
   const totalDuration = timelineEnd.getTime() - timelineStart.getTime();
 
   // Calculate bar dimensions (flipped: newest on left, oldest on right)
   const calculateBarDimensions = (start: string, end: string | null): BarDimensions => {
     const startDate = new Date(start);
-    // Use a fixed "current" date for consistency between server and client
-    const endDate = end ? new Date(end) : new Date('2025-01-01');
+    // Use timeline end for current jobs to extend to end of current year
+    const endDate = end ? new Date(end) : timelineEnd;
 
     const widthPercent = ((endDate.getTime() - startDate.getTime()) / totalDuration) * 100;
     // Flip the timeline: 100 - position of END date gives us left edge in reversed timeline
@@ -313,7 +314,7 @@ export default function ResumeView() {
         <div className="min-w-[1000px] md:min-w-0 scale-90 md:scale-100 origin-left">
           {/* Year Labels */}
           <div className="flex justify-between mb-5">
-            {[2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015].map((year) => (
+            {Array.from({ length: currentYear - 2015 + 1 }, (_, i) => currentYear - i).map((year) => (
               <span key={year} className="text-zinc-500 text-xs font-light">
                 {year}
               </span>
@@ -324,7 +325,7 @@ export default function ResumeView() {
           <div className="h-0.5 bg-zinc-800 mb-10" />
 
           {/* Gantt Chart */}
-          <div className="relative mb-4 md:mb-10" style={{ height: `${ganttHeight}px` }}>
+          <div className="relative" style={{ height: `${ganttHeight}px` }}>
             {bars && bars.map((bar) => (
               <div
                 key={bar.id}
@@ -345,7 +346,7 @@ export default function ResumeView() {
       </div>
 
       {/* Details Panel */}
-      <div ref={detailsRef} className="mt-4 md:mt-10 relative min-h-[150px]">
+      <div ref={detailsRef} className="mt-2 relative">
         <AnimatePresence mode="wait">
           {activeItem ? (
             <motion.div
@@ -354,7 +355,7 @@ export default function ResumeView() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg p-8"
+              className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 h-[240px]"
             >
               {activeItem.url ? (
                 <a
@@ -387,7 +388,7 @@ export default function ResumeView() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="border-2 border-dashed border-zinc-700 rounded-lg p-8 flex items-center justify-center min-h-[150px]"
+              className="border border-dashed border-zinc-700 rounded-lg p-8 flex items-center justify-center h-[240px]"
             >
               <p className="text-zinc-500 text-center">Click a bar to view details</p>
             </motion.div>
