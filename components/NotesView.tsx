@@ -175,7 +175,8 @@ export default function NotesView() {
       </div>
 
       {/* Table */}
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+        <table className="w-full text-sm min-w-[800px]">
         <thead>
           <tr className="border-b border-zinc-800 text-left">
             <th
@@ -232,6 +233,7 @@ export default function NotesView() {
           })}
         </tbody>
       </table>
+      </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-between pt-4 border-t border-zinc-800">

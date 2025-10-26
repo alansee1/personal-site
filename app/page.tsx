@@ -466,7 +466,7 @@ export default function Home() {
             {activeSection && (
               <motion.div
                 key={activeSection}
-                className="absolute inset-0 w-full min-h-screen bg-transparent flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto overflow-x-hidden"
+                className="absolute inset-0 w-full min-h-screen bg-transparent flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto"
               >
                 {/* Back button */}
                 <motion.p
@@ -500,6 +500,7 @@ export default function Home() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: isExiting ? 0 : 1 }}
                   transition={{ duration: 0.3, delay: isExiting ? 0 : 1.5 }}
+                  className="w-full"
                 >
                   <AnimatePresence mode="wait">
                     {activeSection === "projects" && <ProjectsView key="projects" />}
