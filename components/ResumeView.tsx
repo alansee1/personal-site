@@ -355,7 +355,7 @@ export default function ResumeView() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 h-[240px]"
+              className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 min-h-[240px]"
             >
               {activeItem.url ? (
                 <a
