@@ -1,5 +1,11 @@
 [
   {
+    "timestamp": "2025-10-26T09:15:00Z",
+    "projectId": "personal-site",
+    "summary": "Built complete blog system with markdown, syntax highlighting, and SEO",
+    "tags": ["feature", "blog", "markdown", "seo"]
+  },
+  {
     "timestamp": "2025-10-26T01:35:00Z",
     "projectId": "personal-site",
     "summary": "Created /dev-diary and /quick-commit slash commands for workflow automation",
