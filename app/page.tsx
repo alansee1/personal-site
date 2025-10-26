@@ -228,12 +228,12 @@ export default function Home() {
       setIsExiting(false);
 
       // Clear returning flag after morph animation completes
-      // Morph has 0.5s delay + 0.8s duration = 1.3s total
+      // Morph has 0.8s duration, home elements fade in at 1.4s
       setTimeout(() => {
         setIsReturning(false);
         setReturningFrom(null);
         sessionStorage.removeItem('inStateNavigation');
-      }, 1400); // Wait for morph to complete (1.3s) plus a small buffer
+      }, 1400); // Wait for morph to complete
     }, 300);
   };
 
@@ -380,7 +380,7 @@ export default function Home() {
               animate={{ opacity: activeSection || isReturning ? 0 : 1 }}
               transition={{
                 duration: 0.5,
-                delay: activeSection ? 0 : 0
+                delay: activeSection ? 0 : (isReturning ? 1.4 : 0)
               }}
               className="text-white text-7xl md:text-8xl font-light tracking-wide"
             >
@@ -406,7 +406,7 @@ export default function Home() {
                   animate={{ opacity: activeSection || isReturning ? 0 : 1, y: 0 }}
                   transition={{
                     duration: 0.5,
-                    delay: activeSection ? 0 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + index * 0.1)
+                    delay: activeSection ? 0 : (isReturning ? 1.4 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + index * 0.1))
                   }}
                   className="text-white hover:text-zinc-400 transition-colors inline-block hover:scale-125 hover:-translate-y-1 active:scale-90"
                   style={{ pointerEvents: typingDone ? "auto" : "none" }}
@@ -430,12 +430,12 @@ export default function Home() {
                   animate={{
                     opacity: activeSection
                       ? (activeSection === section.id ? 1 : 0)
-                      : (isReturning ? 0 : 1), // Keep all nav buttons invisible during return
+                      : (returningFrom === section.id ? 0 : 1), // Keep selected button hidden during entire return
                     y: 0
                   }}
                   transition={{
                     opacity: {
-                      delay: activeSection ? 0 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + (socialLinks.length - 1) * 0.1 + 0.5 + index * 0.15),
+                      delay: activeSection ? 0 : (isReturning ? 1.4 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + (socialLinks.length - 1) * 0.1 + 0.5 + index * 0.15)),
                       duration: 0.5
                     },
                     y: {
@@ -447,8 +447,8 @@ export default function Home() {
                   whileHover={{ y: -2 }}
                   className="text-white text-lg hover:text-zinc-400 transition-colors cursor-pointer"
                   style={{
-                    pointerEvents: typingDone ? "auto" : "none"
-                    // Removed visibility hidden - we control visibility with opacity for morph to work
+                    pointerEvents: typingDone ? "auto" : "none",
+                    visibility: (returningFrom === section.id) ? "hidden" : "visible"
                   }}
                 >
                   {section.name}
