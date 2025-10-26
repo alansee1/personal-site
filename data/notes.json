@@ -1,5 +1,11 @@
 [
   {
+    "timestamp": "2025-10-26T08:30:00Z",
+    "projectId": "personal-site",
+    "summary": "Added fade-in animations to project detail pages",
+    "tags": ["feature", "animation", "ui"]
+  },
+  {
     "timestamp": "2025-10-26T08:15:00Z",
     "projectId": "personal-site",
     "summary": "Fixed Notes table horizontal scroll on mobile",
