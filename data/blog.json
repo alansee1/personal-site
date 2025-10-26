@@ -1,0 +1,14 @@
+[
+  {
+    "slug": "example-post",
+    "title": "Example Blog Post",
+    "date": "2025-10-26",
+    "description": "This is an example blog post showing the markdown format and frontmatter structure",
+    "tags": [
+      "example",
+      "markdown"
+    ],
+    "published": true,
+    "content": "\n# Example Blog Post\n\nThis is an example post showing how the blog system works.\n\n## Code Example\n\n```typescript\nfunction helloWorld() {\n  console.log(\"Hello, World!\");\n}\n```\n\n## Features\n\n- Markdown support\n- Syntax highlighting\n- Frontmatter metadata\n- SEO optimization\n\nPretty cool, right?\n"
+  }
+]

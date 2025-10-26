@@ -1,51 +1,77 @@
 "use client";
 
-import { motion } from "framer-motion";
+import Link from "next/link";
+import { BlogPostMetadata } from "@/lib/blog";
+import blogData from "@/data/blog.json";
 
-export default function BlogView() {
-  const posts = [
-    {
-      title: "Building a Cinematic Web Animation",
-      date: "Oct 21, 2025",
-      excerpt: "Thoughts on creating delightful micro-interactions and entrance animations..."
-    },
-    {
-      title: "The Art of Minimalism in Design",
-      date: "Oct 15, 2025",
-      excerpt: "Why less is often more when it comes to user interfaces..."
-    },
-    {
-      title: "Getting Started with TypeScript",
-      date: "Oct 10, 2025",
-      excerpt: "A practical guide to adopting TypeScript in your projects..."
-    },
-  ];
+interface BlogViewProps {
+  posts?: BlogPostMetadata[];
+}
+
+export default function BlogView({ posts }: BlogViewProps) {
+  // Use provided posts or fall back to blog.json (for client-side rendering from homepage)
+  const displayPosts = posts || blogData.filter((post) => {
+    // Filter out unpublished posts in production
+    if (process.env.NODE_ENV === 'production') {
+      return post.published;
+    }
+    return true;
+  });
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  if (displayPosts.length === 0) {
+    return (
+      <div className="w-full max-w-4xl">
+        <div className="border border-zinc-800 rounded-lg p-12 text-center">
+          <p className="text-zinc-500 text-lg">No blog posts yet. Check back soon!</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{
-        opacity: { duration: 0.3 }
-      }}
-      className="w-full max-w-4xl"
-    >
-      <div className="space-y-8">
-        {posts.map((post, index) => (
-          <motion.div
-            key={post.title}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="border-b border-zinc-800 pb-8 cursor-pointer hover:opacity-80 transition-opacity"
-          >
-            <h3 className="text-xl font-light text-white mb-1">{post.title}</h3>
-            <p className="text-xs text-zinc-500 mb-3">{post.date}</p>
-            <p className="text-zinc-400">{post.excerpt}</p>
-          </motion.div>
+    <div className="w-full max-w-4xl">
+      <div className="space-y-6">
+        {displayPosts.map((post) => (
+          <Link key={post.slug} href={`/blog/${post.slug}`}>
+            <article className="border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-all cursor-pointer hover:bg-zinc-900/30">
+              <div className="flex items-start justify-between mb-3">
+                <h2 className="text-2xl font-light text-white">{post.title}</h2>
+                {!post.published && (
+                  <span className="text-xs px-2 py-1 rounded border bg-amber-900/30 text-amber-300 border-amber-800">
+                    Draft
+                  </span>
+                )}
+              </div>
+
+              <p className="text-zinc-400 mb-4">{post.description}</p>
+
+              <div className="flex gap-2 flex-wrap mb-4">
+                {post.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-xs px-2 py-1 bg-zinc-900 text-zinc-300 rounded"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              <div className="text-xs text-zinc-500">
+                {formatDate(post.date)}
+              </div>
+            </article>
+          </Link>
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 }

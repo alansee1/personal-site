@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import SectionLayout from "@/components/SectionLayout";
 import BlogView from "@/components/BlogView";
+import { getAllPosts } from "@/lib/blog";
 
 export const metadata: Metadata = {
   title: "Blog - Alan See",
@@ -20,9 +21,11 @@ export const metadata: Metadata = {
 };
 
 export default function BlogPage() {
+  const posts = getAllPosts();
+
   return (
     <SectionLayout title="Blog">
-      <BlogView />
+      <BlogView posts={posts} />
     </SectionLayout>
   );
 }
