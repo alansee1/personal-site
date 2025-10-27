@@ -4,40 +4,75 @@ import React, { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import projectsData from "@/data/projects.json";
 
 interface ProjectPageProps {
   params: Promise<{ id: string }>;
 }
 
+type Project = {
+  id: number;
+  slug: string;
+  title: string;
+  description: string;
+  long_description: string | null;
+  status: string;
+  tech: string[];
+  github: string | null;
+  url: string | null;
+  media: any[];
+  start_date: string | null;
+  end_date: string | null;
+};
+
 type Note = {
   id: number;
   timestamp: string;
-  project_id: string;
+  project_id: number;
   summary: string;
   tags: string[];
 };
 
 export default function ProjectPage({ params }: ProjectPageProps) {
-  const { id } = React.use(params);
-  const project = projectsData.find((p) => p.id === id);
+  const { id: slug } = React.use(params);
+  const [project, setProject] = useState<Project | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [loadingProject, setLoadingProject] = useState(true);
   const [loadingNotes, setLoadingNotes] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!project) {
-    notFound();
-  }
-
-  // Fetch notes from API
+  // Fetch project from API
   useEffect(() => {
-    if (!project) return;
+    async function fetchProject() {
+      try {
+        const response = await fetch(`/api/projects/${slug}`);
+        if (response.ok) {
+          const result = await response.json();
+          setProject(result.data);
+        } else if (response.status === 404) {
+          setProject(null);
+        } else {
+          setError('Failed to load project');
+        }
+      } catch (err) {
+        console.error('Failed to fetch project:', err);
+        setError('Failed to load project');
+      } finally {
+        setLoadingProject(false);
+      }
+    }
+    fetchProject();
+  }, [slug]);
+
+  // Fetch notes from API when project loads
+  useEffect(() => {
+    if (!project?.id) return;
 
     async function fetchNotes() {
       try {
-        const response = await fetch(`/api/notes?project_id=${project!.id}`);
+        const response = await fetch(`/api/notes?project_id=${project.id}`);
         if (response.ok) {
           const data = await response.json();
-          setNotes(data.data);
+          setNotes(data.data || []);
         }
       } catch (error) {
         console.error('Failed to fetch notes:', error);
@@ -46,7 +81,19 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       }
     }
     fetchNotes();
-  }, [project]);
+  }, [project?.id]);
+
+  if (loadingProject) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-zinc-400">Loading project...</p>
+      </div>
+    );
+  }
+
+  if (error || !project) {
+    notFound();
+  }
 
   // Get all notes related to this project (already filtered by API)
   const projectNotes = notes;

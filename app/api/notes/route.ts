@@ -5,11 +5,16 @@ import { supabaseClient } from '@/lib/supabase';
 export type Note = {
   id?: number;
   timestamp: string;
-  project_id: string;
+  project_id: number;
   summary: string;
   tags: string[];
   created_at?: string;
   updated_at?: string;
+  projects?: {
+    id: number;
+    slug: string;
+    title: string;
+  };
 };
 
 /**
@@ -23,10 +28,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('project_id');
 
-    // Build query
+    // Build query - join with projects table to get project info
     let query = supabaseClient
       .from('notes')
-      .select('*')
+      .select('*, projects(id, slug, title)')
       .order('timestamp', { ascending: false });
 
     // Filter by project if specified

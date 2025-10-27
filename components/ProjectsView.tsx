@@ -1,9 +1,45 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import projectsData from "@/data/projects.json";
+
+type Project = {
+  id: number;
+  slug: string;
+  title: string;
+  description: string;
+  status: string;
+  tech: string[];
+  github: string | null;
+  url: string | null;
+};
 
 export default function ProjectsView() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch projects from API
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const response = await fetch('/api/projects');
+        if (response.ok) {
+          const result = await response.json();
+          setProjects(result.data || []);
+        } else {
+          setError('Failed to load projects');
+        }
+      } catch (err) {
+        console.error('Failed to fetch projects:', err);
+        setError('Failed to load projects');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProjects();
+  }, []);
+
   // Get status badge color
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -18,11 +54,35 @@ export default function ProjectsView() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="w-full max-w-4xl">
+        <p className="text-zinc-400">Loading projects...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full max-w-4xl">
+        <p className="text-red-400">{error}</p>
+      </div>
+    );
+  }
+
+  if (projects.length === 0) {
+    return (
+      <div className="w-full max-w-4xl">
+        <p className="text-zinc-400">No projects yet.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-4xl">
       <div className="space-y-6">
-        {projectsData.map((project, index) => (
-          <Link key={project.id} href={`/projects/${project.id}`}>
+        {projects.map((project) => (
+          <Link key={project.id} href={`/projects/${project.slug}`}>
             <div className="border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-all cursor-pointer hover:bg-zinc-900/30">
               <div className="flex items-start justify-between mb-3">
                 <h3 className="text-2xl font-light text-white">{project.title}</h3>

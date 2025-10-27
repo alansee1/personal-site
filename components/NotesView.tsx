@@ -1,14 +1,24 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import projectsData from "@/data/projects.json";
 
 type Note = {
   id: number;
   timestamp: string;
-  project_id: string;
+  project_id: number;
   summary: string;
   tags: string[];
+  projects?: {
+    id: number;
+    slug: string;
+    title: string;
+  };
+};
+
+type Project = {
+  id: number;
+  slug: string;
+  title: string;
 };
 
 type SortField = "time" | "project";
@@ -19,39 +29,45 @@ export default function NotesView() {
 
   // State
   const [notes, setNotes] = useState<Note[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortField, setSortField] = useState<SortField>("time");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
-  // Fetch notes from API on mount
+  // Fetch notes and projects from API on mount
   useEffect(() => {
-    async function fetchNotes() {
+    async function fetchData() {
       try {
         setLoading(true);
-        const response = await fetch('/api/notes');
-        if (!response.ok) {
+
+        // Fetch notes with project info
+        const notesResponse = await fetch('/api/notes');
+        if (!notesResponse.ok) {
           throw new Error('Failed to fetch notes');
         }
-        const json = await response.json();
-        setNotes(json.data);
+        const notesJson = await notesResponse.json();
+        setNotes(notesJson.data || []);
+
+        // Fetch projects for filter dropdown
+        const projectsResponse = await fetch('/api/projects');
+        if (!projectsResponse.ok) {
+          throw new Error('Failed to fetch projects');
+        }
+        const projectsJson = await projectsResponse.json();
+        setProjects(projectsJson.data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load notes');
+        setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setLoading(false);
       }
     }
-    fetchNotes();
+    fetchData();
   }, []);
-
-  // Create a map of project IDs to project info for easy lookup
-  const projectsMap = new Map(
-    projectsData.map((project) => [project.id, project])
-  );
 
   // Format timestamp to relative time or date
   const formatRelativeTime = (timestamp: string) => {
@@ -136,8 +152,8 @@ export default function NotesView() {
         const timeB = new Date(b.timestamp).getTime();
         return sortDirection === "asc" ? timeA - timeB : timeB - timeA;
       } else {
-        const projectA = projectsMap.get(a.project_id)?.title || "";
-        const projectB = projectsMap.get(b.project_id)?.title || "";
+        const projectA = a.projects?.title || "";
+        const projectB = b.projects?.title || "";
         return sortDirection === "asc"
           ? projectA.localeCompare(projectB)
           : projectB.localeCompare(projectA);
@@ -145,7 +161,7 @@ export default function NotesView() {
     });
 
     return filtered;
-  }, [notes, searchQuery, selectedProject, selectedTags, sortField, sortDirection, projectsMap]);
+  }, [notes, searchQuery, selectedProject, selectedTags, sortField, sortDirection]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedNotes.length / ITEMS_PER_PAGE);
@@ -188,15 +204,15 @@ export default function NotesView() {
             className="flex-1 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-zinc-700"
           />
           <select
-            value={selectedProject || ""}
+            value={selectedProject?.toString() || ""}
             onChange={(e) => {
-              setSelectedProject(e.target.value || null);
+              setSelectedProject(e.target.value ? parseInt(e.target.value) : null);
               setCurrentPage(1);
             }}
             className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-300 focus:outline-none focus:border-zinc-700"
           >
             <option value="">All Projects</option>
-            {projectsData.map((project) => (
+            {projects.map((project) => (
               <option key={project.id} value={project.id}>
                 {project.title}
               </option>
@@ -245,8 +261,6 @@ export default function NotesView() {
         </thead>
         <tbody>
           {paginatedNotes.map((note, index) => {
-            const project = projectsMap.get(note.project_id);
-
             return (
               <tr
                 key={note.id}
@@ -256,7 +270,7 @@ export default function NotesView() {
                   {formatRelativeTime(note.timestamp)}
                 </td>
                 <td className="py-3 pr-6 text-zinc-400 whitespace-nowrap align-top">
-                  {project?.title || '-'}
+                  {note.projects?.title || '-'}
                 </td>
                 <td className="py-3 pr-6 text-zinc-300 align-top">
                   {note.summary}
