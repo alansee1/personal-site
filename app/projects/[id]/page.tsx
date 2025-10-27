@@ -1,9 +1,15 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { Metadata } from "next";
+import fs from "fs";
+import path from "path";
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import remarkGfm from "remark-gfm";
+import { supabaseClient } from "@/lib/supabase";
+import WorkLogSection from "./WorkLogSection";
+import "highlight.js/styles/github-dark.css";
 
 interface ProjectPageProps {
   params: Promise<{ id: string }>;
@@ -32,73 +38,96 @@ type Note = {
   tags: string[];
 };
 
-export default function ProjectPage({ params }: ProjectPageProps) {
-  const { id: slug } = React.use(params);
-  const [project, setProject] = useState<Project | null>(null);
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loadingProject, setLoadingProject] = useState(true);
-  const [loadingNotes, setLoadingNotes] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Fetch project from Supabase
+async function getProject(slug: string): Promise<Project | null> {
+  const { data, error } = await supabaseClient
+    .from('projects')
+    .select('*')
+    .eq('slug', slug)
+    .single();
 
-  // Fetch project from API
-  useEffect(() => {
-    async function fetchProject() {
-      try {
-        const response = await fetch(`/api/projects/${slug}`);
-        if (response.ok) {
-          const result = await response.json();
-          setProject(result.data);
-        } else if (response.status === 404) {
-          setProject(null);
-        } else {
-          setError('Failed to load project');
-        }
-      } catch (err) {
-        console.error('Failed to fetch project:', err);
-        setError('Failed to load project');
-      } finally {
-        setLoadingProject(false);
-      }
-    }
-    fetchProject();
-  }, [slug]);
-
-  // Fetch notes from API when project loads
-  useEffect(() => {
-    if (!project?.id) return;
-
-    const projectId = project.id; // Capture ID in closure for TypeScript
-
-    async function fetchNotes() {
-      try {
-        const response = await fetch(`/api/notes?project_id=${projectId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setNotes(data.data || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch notes:', error);
-      } finally {
-        setLoadingNotes(false);
-      }
-    }
-    fetchNotes();
-  }, [project?.id]);
-
-  if (loadingProject) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <p className="text-zinc-400">Loading project...</p>
-      </div>
-    );
+  if (error || !data) {
+    return null;
   }
 
-  if (error || !project) {
+  return data as Project;
+}
+
+// Read markdown file
+function getMarkdownContent(slug: string): string | null {
+  try {
+    const filePath = path.join(process.cwd(), 'content', 'projects', `${slug}.md`);
+
+    if (!fs.existsSync(filePath)) {
+      return null;
+    }
+
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+
+    // Remove frontmatter (everything between --- and ---)
+    const content = fileContent.replace(/^---[\s\S]*?---\n/, '');
+
+    return content.trim();
+  } catch (error) {
+    console.error('Error reading markdown:', error);
+    return null;
+  }
+}
+
+// Fetch notes for this project
+async function getProjectNotes(projectId: number): Promise<Note[]> {
+  const { data, error } = await supabaseClient
+    .from('notes')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('timestamp', { ascending: false });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data as Note[];
+}
+
+// Generate metadata for SEO
+export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
+  const { id: slug } = await params;
+  const project = await getProject(slug);
+
+  if (!project) {
+    return {
+      title: 'Project Not Found',
+    };
+  }
+
+  return {
+    title: `${project.title} | Alan See`,
+    description: project.description,
+    openGraph: {
+      title: `${project.title} | Alan See`,
+      description: project.description,
+      type: 'article',
+      url: `https://alansee.dev/projects/${slug}`,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${project.title} | Alan See`,
+      description: project.description,
+    },
+    keywords: [project.title, ...project.tech, 'project', 'portfolio'].join(', '),
+  };
+}
+
+export default async function ProjectPage({ params }: ProjectPageProps) {
+  const { id: slug } = await params;
+  const project = await getProject(slug);
+
+  if (!project) {
     notFound();
   }
 
-  // Get all notes related to this project (already filtered by API)
-  const projectNotes = notes;
+  const markdownContent = getMarkdownContent(slug);
+  const notes = await getProjectNotes(project.id);
 
   // Get status badge color
   const getStatusColor = (status: string) => {
@@ -114,45 +143,6 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     }
   };
 
-  // Format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  // Format relative time (like Notes table)
-  const formatRelativeTime = (timestamp: string) => {
-    const now = new Date();
-    const date = new Date(timestamp);
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 60) {
-      if (diffMins < 1) return "just now";
-      return diffMins === 1 ? "1 minute ago" : `${diffMins} minutes ago`;
-    }
-
-    if (diffHours < 24) {
-      return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
-    }
-
-    if (diffDays < 7) {
-      return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
-    }
-
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="w-full min-h-screen flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto overflow-x-hidden">
@@ -165,126 +155,126 @@ export default function ProjectPage({ params }: ProjectPageProps) {
         </Link>
 
         {/* Project Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex items-start justify-between mb-6 w-full max-w-4xl"
-        >
+        <div className="flex items-start justify-between mb-6 w-full max-w-4xl">
           <h1 className="text-5xl md:text-6xl font-light tracking-wide text-white">{project.title}</h1>
           <span className={`text-xs px-3 py-1.5 rounded border capitalize ${getStatusColor(project.status)}`}>
             {project.status}
           </span>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full max-w-4xl mb-12"
-        >
-
-        <p className="text-xl text-zinc-400 mb-8 leading-relaxed">{project.description}</p>
-
-        {/* Tech Stack */}
-        <div className="mb-8">
-          <h2 className="text-sm text-zinc-500 uppercase tracking-wider mb-3">Tech Stack</h2>
-          <div className="flex gap-2 flex-wrap">
-            {project.tech.map((tech) => (
-              <span
-                key={tech}
-                className="text-sm px-3 py-1.5 bg-zinc-900 text-zinc-300 rounded border border-zinc-800"
-              >
-                {tech}
-              </span>
-            ))}
-          </div>
         </div>
 
-        {/* Links */}
-        {(project.url || project.github) && (
-          <div className="flex gap-4 mb-12">
-            {project.url && (
-              <a
-                href={project.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 bg-white text-black rounded hover:bg-zinc-200 transition-colors text-sm font-medium"
-              >
-                View Live Site →
-              </a>
-            )}
-            {project.github && (
-              <a
-                href={project.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 border border-zinc-700 text-white rounded hover:border-zinc-500 transition-colors text-sm"
-              >
-                View on GitHub →
-              </a>
-            )}
+        <div className="w-full max-w-4xl">
+          <p className="text-xl text-zinc-400 mb-6 leading-relaxed">{project.description}</p>
+
+          {/* Tech Stack */}
+          <div className="mb-8">
+            <h2 className="text-sm text-zinc-500 uppercase tracking-wider mb-3">Tech Stack</h2>
+            <div className="flex gap-2 flex-wrap">
+              {project.tech.map((tech) => (
+                <span
+                  key={tech}
+                  className="text-sm px-3 py-1.5 bg-zinc-900 text-zinc-300 rounded border border-zinc-800"
+                >
+                  {tech}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Links */}
+          {(project.url || project.github) && (
+            <div className="flex gap-4 mb-8">
+              {project.url && (
+                <a
+                  href={project.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-white text-black rounded hover:bg-zinc-200 transition-colors text-sm font-medium"
+                >
+                  View Live Site →
+                </a>
+              )}
+              {project.github && (
+                <a
+                  href={project.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 border border-zinc-700 text-white rounded hover:border-zinc-500 transition-colors text-sm"
+                >
+                  View on GitHub →
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Markdown Content */}
+        {markdownContent ? (
+          <article className="w-full max-w-4xl prose prose-invert prose-zinc max-w-none">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+              components={{
+                h1: ({ node, ...props }: any) => (
+                  <h1 className="text-3xl font-light text-white mt-12 mb-4" {...props} />
+                ),
+                h2: ({ node, ...props }: any) => (
+                  <h2 className="text-2xl font-light text-white mt-8 mb-4 first:mt-0" {...props} />
+                ),
+                h3: ({ node, ...props }: any) => (
+                  <h3 className="text-xl font-light text-white mt-8 mb-3" {...props} />
+                ),
+                p: ({ node, ...props }: any) => (
+                  <p className="text-zinc-300 leading-relaxed mb-6" {...props} />
+                ),
+                a: ({ node, ...props }: any) => (
+                  <a
+                    className="text-blue-400 hover:text-blue-300 underline transition-colors"
+                    {...props}
+                  />
+                ),
+                ul: ({ node, ...props }: any) => (
+                  <ul className="list-disc list-inside text-zinc-300 mb-6 space-y-2" {...props} />
+                ),
+                ol: ({ node, ...props }: any) => (
+                  <ol className="list-decimal list-inside text-zinc-300 mb-6 space-y-2" {...props} />
+                ),
+                li: ({ node, ...props }: any) => (
+                  <li className="text-zinc-300" {...props} />
+                ),
+                code: ({ node, ...props }: any) =>
+                  props.inline ? (
+                    <code
+                      className="bg-zinc-900 text-zinc-300 px-1.5 py-0.5 rounded text-sm font-mono border border-zinc-800"
+                      {...props}
+                    />
+                  ) : (
+                    <code className="text-sm" {...props} />
+                  ),
+                pre: ({ node, ...props }: any) => (
+                  <pre className="bg-zinc-900 rounded-lg p-4 overflow-x-auto mb-6 border border-zinc-800" {...props} />
+                ),
+                blockquote: ({ node, ...props }: any) => (
+                  <blockquote
+                    className="border-l-4 border-zinc-700 pl-4 italic text-zinc-400 my-6"
+                    {...props}
+                  />
+                ),
+                strong: ({ node, ...props }: any) => (
+                  <strong className="font-bold text-white" {...props} />
+                ),
+              }}
+            >
+              {markdownContent}
+            </ReactMarkdown>
+          </article>
+        ) : (
+          <div className="w-full max-w-4xl">
+            <p className="text-zinc-500 italic">No detailed description available yet.</p>
           </div>
         )}
-      </motion.div>
 
-      {/* Work Log / Notes */}
-      {projectNotes.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="w-full max-w-4xl mb-12"
-        >
-          <h2 className="text-2xl font-light text-white mb-6">Work Log</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-zinc-800 text-left">
-                  <th className="pb-3 pr-6 font-normal text-zinc-500 text-xs uppercase tracking-wider">
-                    Time
-                  </th>
-                  <th className="pb-3 pr-6 font-normal text-zinc-500 text-xs uppercase tracking-wider">
-                    Summary
-                  </th>
-                  <th className="pb-3 font-normal text-zinc-500 text-xs uppercase tracking-wider">
-                    Tags
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {projectNotes.map((note, index) => (
-                  <tr
-                    key={`${note.timestamp}-${index}`}
-                    className="border-b border-zinc-800/50 hover:bg-zinc-900/30 transition-colors"
-                  >
-                    <td className="py-3 pr-6 text-zinc-500 whitespace-nowrap align-top">
-                      {formatRelativeTime(note.timestamp)}
-                    </td>
-                    <td className="py-3 pr-6 text-zinc-300 align-top">
-                      {note.summary}
-                    </td>
-                    <td className="py-3 align-top">
-                      {note.tags && note.tags.length > 0 && (
-                        <div className="flex gap-1.5 flex-wrap">
-                          {note.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="text-xs px-2 py-0.5 bg-zinc-900 text-zinc-400 rounded border border-zinc-800"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
-      )}
+        {/* Work Log Section (Client Component) */}
+        <WorkLogSection notes={notes} />
       </div>
     </div>
   );
