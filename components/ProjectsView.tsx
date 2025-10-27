@@ -12,6 +12,7 @@ type Project = {
   tech: string[];
   github: string | null;
   url: string | null;
+  last_updated_at: string;
 };
 
 export default function ProjectsView() {
@@ -52,6 +53,35 @@ export default function ProjectsView() {
       default:
         return "bg-zinc-800 text-zinc-300 border-zinc-700";
     }
+  };
+
+  // Format relative time
+  const formatRelativeTime = (timestamp: string) => {
+    const now = new Date();
+    const date = new Date(timestamp);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) {
+      if (diffMins < 1) return "just now";
+      return diffMins === 1 ? "1 minute ago" : `${diffMins} minutes ago`;
+    }
+
+    if (diffHours < 24) {
+      return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
+    }
+
+    if (diffDays < 7) {
+      return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
+    }
+
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   if (loading) {
@@ -104,19 +134,24 @@ export default function ProjectsView() {
                 ))}
               </div>
 
-              <div className="flex gap-4 text-xs text-zinc-500">
-                {project.url && (
-                  <span className="flex items-center gap-1">
-                    <span>🔗</span>
-                    <span>Live site</span>
-                  </span>
-                )}
-                {project.github && (
-                  <span className="flex items-center gap-1">
-                    <span>📦</span>
-                    <span>GitHub</span>
-                  </span>
-                )}
+              <div className="flex items-center justify-between text-xs text-zinc-500">
+                <div className="flex gap-4">
+                  {project.url && (
+                    <span className="flex items-center gap-1">
+                      <span>🔗</span>
+                      <span>Live site</span>
+                    </span>
+                  )}
+                  {project.github && (
+                    <span className="flex items-center gap-1">
+                      <span>📦</span>
+                      <span>GitHub</span>
+                    </span>
+                  )}
+                </div>
+                <span className="text-zinc-600">
+                  Updated {formatRelativeTime(project.last_updated_at)}
+                </span>
               </div>
             </div>
           </Link>

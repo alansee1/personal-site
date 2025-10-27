@@ -124,6 +124,35 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     });
   };
 
+  // Format relative time (like Notes table)
+  const formatRelativeTime = (timestamp: string) => {
+    const now = new Date();
+    const date = new Date(timestamp);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) {
+      if (diffMins < 1) return "just now";
+      return diffMins === 1 ? "1 minute ago" : `${diffMins} minutes ago`;
+    }
+
+    if (diffHours < 24) {
+      return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
+    }
+
+    if (diffDays < 7) {
+      return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
+    }
+
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="w-full min-h-screen flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto overflow-x-hidden">
@@ -208,16 +237,51 @@ export default function ProjectPage({ params }: ProjectPageProps) {
           className="w-full max-w-4xl mb-12"
         >
           <h2 className="text-2xl font-light text-white mb-6">Work Log</h2>
-          <div className="space-y-4">
-            {projectNotes.map((note, index) => (
-              <div
-                key={`${note.timestamp}-${index}`}
-                className="border-l-2 border-zinc-800 pl-4 py-2"
-              >
-                <p className="text-xs text-zinc-500 mb-1">{formatDate(note.timestamp)}</p>
-                <p className="text-zinc-300">{note.summary}</p>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 text-left">
+                  <th className="pb-3 pr-6 font-normal text-zinc-500 text-xs uppercase tracking-wider">
+                    Time
+                  </th>
+                  <th className="pb-3 pr-6 font-normal text-zinc-500 text-xs uppercase tracking-wider">
+                    Summary
+                  </th>
+                  <th className="pb-3 font-normal text-zinc-500 text-xs uppercase tracking-wider">
+                    Tags
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {projectNotes.map((note, index) => (
+                  <tr
+                    key={`${note.timestamp}-${index}`}
+                    className="border-b border-zinc-800/50 hover:bg-zinc-900/30 transition-colors"
+                  >
+                    <td className="py-3 pr-6 text-zinc-500 whitespace-nowrap align-top">
+                      {formatRelativeTime(note.timestamp)}
+                    </td>
+                    <td className="py-3 pr-6 text-zinc-300 align-top">
+                      {note.summary}
+                    </td>
+                    <td className="py-3 align-top">
+                      {note.tags && note.tags.length > 0 && (
+                        <div className="flex gap-1.5 flex-wrap">
+                          {note.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="text-xs px-2 py-0.5 bg-zinc-900 text-zinc-400 rounded border border-zinc-800"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </motion.div>
       )}
