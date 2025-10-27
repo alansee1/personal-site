@@ -1,26 +1,53 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import projectsData from "@/data/projects.json";
-import notesData from "@/data/notes.json";
 
 interface ProjectPageProps {
   params: Promise<{ id: string }>;
 }
 
+type Note = {
+  id: number;
+  timestamp: string;
+  project_id: string;
+  summary: string;
+  tags: string[];
+};
+
 export default function ProjectPage({ params }: ProjectPageProps) {
   const { id } = React.use(params);
   const project = projectsData.find((p) => p.id === id);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loadingNotes, setLoadingNotes] = useState(true);
 
   if (!project) {
     notFound();
   }
 
-  // Get all notes related to this project
-  const projectNotes = notesData.filter((note) => note.projectId === project.id);
+  // Fetch notes from API
+  useEffect(() => {
+    async function fetchNotes() {
+      try {
+        const response = await fetch(`/api/notes?project_id=${project.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setNotes(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch notes:', error);
+      } finally {
+        setLoadingNotes(false);
+      }
+    }
+    fetchNotes();
+  }, [project.id]);
+
+  // Get all notes related to this project (already filtered by API)
+  const projectNotes = notes;
 
   // Get status badge color
   const getStatusColor = (status: string) => {

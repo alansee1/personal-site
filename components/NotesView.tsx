@@ -1,8 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import notesData from "@/data/notes.json";
+import { useState, useMemo, useEffect } from "react";
 import projectsData from "@/data/projects.json";
+
+type Note = {
+  id: number;
+  timestamp: string;
+  project_id: string;
+  summary: string;
+  tags: string[];
+};
 
 type SortField = "time" | "project";
 type SortDirection = "asc" | "desc";
@@ -11,12 +18,35 @@ export default function NotesView() {
   const ITEMS_PER_PAGE = 20;
 
   // State
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortField, setSortField] = useState<SortField>("time");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  // Fetch notes from API on mount
+  useEffect(() => {
+    async function fetchNotes() {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/notes');
+        if (!response.ok) {
+          throw new Error('Failed to fetch notes');
+        }
+        const json = await response.json();
+        setNotes(json.data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load notes');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchNotes();
+  }, []);
 
   // Create a map of project IDs to project info for easy lookup
   const projectsMap = new Map(
@@ -78,7 +108,7 @@ export default function NotesView() {
 
   // Filter and sort data
   const filteredAndSortedNotes = useMemo(() => {
-    let filtered = [...notesData];
+    let filtered = [...notes];
 
     // Filter by search query
     if (searchQuery) {
@@ -89,7 +119,7 @@ export default function NotesView() {
 
     // Filter by project
     if (selectedProject) {
-      filtered = filtered.filter((note) => note.projectId === selectedProject);
+      filtered = filtered.filter((note) => note.project_id === selectedProject);
     }
 
     // Filter by tags
@@ -106,8 +136,8 @@ export default function NotesView() {
         const timeB = new Date(b.timestamp).getTime();
         return sortDirection === "asc" ? timeA - timeB : timeB - timeA;
       } else {
-        const projectA = projectsMap.get(a.projectId)?.title || "";
-        const projectB = projectsMap.get(b.projectId)?.title || "";
+        const projectA = projectsMap.get(a.project_id)?.title || "";
+        const projectB = projectsMap.get(b.project_id)?.title || "";
         return sortDirection === "asc"
           ? projectA.localeCompare(projectB)
           : projectB.localeCompare(projectA);
@@ -115,13 +145,31 @@ export default function NotesView() {
     });
 
     return filtered;
-  }, [searchQuery, selectedProject, selectedTags, sortField, sortDirection, projectsMap]);
+  }, [notes, searchQuery, selectedProject, selectedTags, sortField, sortDirection, projectsMap]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedNotes.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedNotes = filteredAndSortedNotes.slice(startIndex, endIndex);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="w-full max-w-6xl flex items-center justify-center py-20">
+        <div className="text-zinc-400 text-lg">Loading notes...</div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="w-full max-w-6xl flex items-center justify-center py-20">
+        <div className="text-red-400 text-lg">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-6xl space-y-6">
@@ -197,11 +245,11 @@ export default function NotesView() {
         </thead>
         <tbody>
           {paginatedNotes.map((note, index) => {
-            const project = projectsMap.get(note.projectId);
+            const project = projectsMap.get(note.project_id);
 
             return (
               <tr
-                key={`${note.timestamp}-${index}`}
+                key={note.id}
                 className="border-b border-zinc-800/50 hover:bg-zinc-900/30 transition-colors"
               >
                 <td className="py-3 pr-6 text-zinc-500 whitespace-nowrap align-top">
