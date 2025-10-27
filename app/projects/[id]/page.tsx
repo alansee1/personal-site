@@ -67,9 +67,11 @@ export default function ProjectPage({ params }: ProjectPageProps) {
   useEffect(() => {
     if (!project?.id) return;
 
+    const projectId = project.id; // Capture ID in closure for TypeScript
+
     async function fetchNotes() {
       try {
-        const response = await fetch(`/api/notes?project_id=${project.id}`);
+        const response = await fetch(`/api/notes?project_id=${projectId}`);
         if (response.ok) {
           const data = await response.json();
           setNotes(data.data || []);
