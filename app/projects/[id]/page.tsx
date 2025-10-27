@@ -30,9 +30,11 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
   // Fetch notes from API
   useEffect(() => {
+    if (!project) return;
+
     async function fetchNotes() {
       try {
-        const response = await fetch(`/api/notes?project_id=${project.id}`);
+        const response = await fetch(`/api/notes?project_id=${project!.id}`);
         if (response.ok) {
           const data = await response.json();
           setNotes(data.data);
@@ -44,7 +46,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       }
     }
     fetchNotes();
-  }, [project.id]);
+  }, [project]);
 
   // Get all notes related to this project (already filtered by API)
   const projectNotes = notes;
