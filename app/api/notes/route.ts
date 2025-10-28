@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseClient } from '@/lib/supabase';
 
-// Define the Note type
-export type Note = {
+// Define the Work Item type (notes table with work management fields)
+export type WorkItem = {
   id?: number;
-  timestamp: string;
   project_id: number;
   summary: string;
+  completed_summary: string | null;
   tags: string[];
+  status: 'pending' | 'in_progress' | 'completed';
+  started_at: string | null;
+  completed_at: string | null;
   created_at?: string;
   updated_at?: string;
   projects?: {
@@ -17,11 +20,15 @@ export type Note = {
   };
 };
 
+// Legacy type alias for backward compatibility
+export type Note = WorkItem;
+
 /**
  * GET /api/notes
  *
- * Fetch all notes from Supabase
+ * Fetch completed work items from Supabase
  * Public endpoint - uses anon key with RLS protection
+ * Only returns items with status='completed' for public display
  */
 export async function GET(request: NextRequest) {
   try {
@@ -29,10 +36,12 @@ export async function GET(request: NextRequest) {
     const projectId = searchParams.get('project_id');
 
     // Build query - join with projects table to get project info
+    // Only fetch completed items for public display
     let query = supabaseClient
       .from('notes')
       .select('*, projects(id, slug, title)')
-      .order('timestamp', { ascending: false });
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false });
 
     // Filter by project if specified
     if (projectId) {

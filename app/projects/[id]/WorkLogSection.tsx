@@ -2,16 +2,19 @@
 
 import { useState } from "react";
 
-type Note = {
+type WorkItem = {
   id: number;
-  timestamp: string;
+  completed_at: string;
+  started_at: string | null;
+  status: string;
   project_id: number;
   summary: string;
+  completed_summary: string | null;
   tags: string[];
 };
 
 interface WorkLogSectionProps {
-  notes: Note[];
+  notes: WorkItem[];
 }
 
 export default function WorkLogSection({ notes }: WorkLogSectionProps) {
@@ -83,14 +86,14 @@ export default function WorkLogSection({ notes }: WorkLogSectionProps) {
             <tbody>
               {notes.map((note, index) => (
                 <tr
-                  key={`${note.timestamp}-${index}`}
+                  key={`${note.completed_at}-${index}`}
                   className="border-b border-zinc-800/50 hover:bg-zinc-900/30 transition-colors"
                 >
                   <td className="py-3 pr-6 text-zinc-500 whitespace-nowrap align-top">
-                    {formatRelativeTime(note.timestamp)}
+                    {formatRelativeTime(note.completed_at)}
                   </td>
                   <td className="py-3 pr-6 text-zinc-300 align-top">
-                    {note.summary}
+                    {note.completed_summary || note.summary}
                   </td>
                   <td className="py-3 align-top">
                     {note.tags && note.tags.length > 0 && (

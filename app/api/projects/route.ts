@@ -39,29 +39,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch the most recent note timestamp for each project
+    // Fetch the most recent completed work item timestamp for each project
     const { data: latestNotes, error: notesError } = await supabaseClient
       .from('notes')
-      .select('project_id, timestamp')
-      .order('timestamp', { ascending: false });
+      .select('project_id, completed_at')
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false });
 
     if (notesError) {
       console.error('Error fetching notes:', notesError);
       // Don't fail if notes fetch fails, just continue without last_updated_at
     }
 
-    // Create a map of project_id -> most recent timestamp
+    // Create a map of project_id -> most recent completed_at timestamp
     const lastUpdatedMap = new Map();
     if (latestNotes) {
       latestNotes.forEach(note => {
         if (!lastUpdatedMap.has(note.project_id)) {
-          lastUpdatedMap.set(note.project_id, note.timestamp);
+          lastUpdatedMap.set(note.project_id, note.completed_at);
         }
       });
     }
 
     // Enrich projects with last_updated_at
-    // Fallback order: most recent note timestamp -> start_date -> updated_at
+    // Fallback order: most recent completed work item -> start_date -> updated_at
     const enrichedProjects = projects.map(project => ({
       ...project,
       last_updated_at: lastUpdatedMap.get(project.id) || project.start_date || project.updated_at

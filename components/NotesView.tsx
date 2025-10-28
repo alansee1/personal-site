@@ -5,9 +5,12 @@ import NoteRowSkeleton from "./NoteRowSkeleton";
 
 type Note = {
   id: number;
-  timestamp: string;
+  completed_at: string;
+  started_at: string | null;
+  status: string;
   project_id: number;
   summary: string;
+  completed_summary: string | null;
   tags: string[];
   projects?: {
     id: number;
@@ -149,8 +152,8 @@ export default function NotesView() {
     // Sort
     filtered.sort((a, b) => {
       if (sortField === "time") {
-        const timeA = new Date(a.timestamp).getTime();
-        const timeB = new Date(b.timestamp).getTime();
+        const timeA = new Date(a.completed_at).getTime();
+        const timeB = new Date(b.completed_at).getTime();
         return sortDirection === "asc" ? timeA - timeB : timeB - timeA;
       } else {
         const projectA = a.projects?.title || "";
@@ -319,13 +322,13 @@ export default function NotesView() {
                 className="border-b border-zinc-800/50 hover:bg-zinc-900/30 transition-colors"
               >
                 <td className="py-3 pr-6 text-zinc-500 whitespace-nowrap align-top">
-                  {formatRelativeTime(note.timestamp)}
+                  {formatRelativeTime(note.completed_at)}
                 </td>
                 <td className="py-3 pr-6 text-zinc-400 whitespace-nowrap align-top">
                   {note.projects?.title || '-'}
                 </td>
                 <td className="py-3 pr-6 text-zinc-300 align-top">
-                  {note.summary}
+                  {note.completed_summary || note.summary}
                 </td>
                 <td className="py-3 align-top">
                   {note.tags && note.tags.length > 0 && (

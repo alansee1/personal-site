@@ -33,7 +33,7 @@ export default function Home() {
   const fullName = "Alan See";
 
   // Section navigation state
-  type Section = "projects" | "blog" | "resume" | "notes" | "shelf";
+  type Section = "projects" | "blog" | "resume" | "work" | "shelf";
   type SectionType = Section | null;
   const [activeSection, setActiveSection] = useState<SectionType>(null);
   const [returningFrom, setReturningFrom] = useState<SectionType>(null);
@@ -315,7 +315,7 @@ export default function Home() {
       } else if (path !== '/' && !activeSection) {
         // Browser forward to section
         const section = path.slice(1) as Section;
-        if (section && ["projects", "blog", "resume", "notes", "shelf"].includes(section)) {
+        if (section && ["projects", "blog", "resume", "work", "shelf"].includes(section)) {
           setActiveSection(section);
         }
       }
@@ -338,7 +338,7 @@ export default function Home() {
     { name: "Projects", id: "projects" },
     { name: "Blog", id: "blog" },
     { name: "Resume", id: "resume" },
-    { name: "Notes", id: "notes" },
+    { name: "Work", id: "work" },
     { name: "Shelf", id: "shelf" },
   ];
 
@@ -575,7 +575,7 @@ export default function Home() {
                     {activeSection === "projects" && <ProjectsView key="projects" />}
                     {activeSection === "blog" && <BlogView key="blog" />}
                     {activeSection === "resume" && <ResumeView key="resume" />}
-                    {activeSection === "notes" && <NotesView key="notes" />}
+                    {activeSection === "work" && <NotesView key="work" />}
                     {activeSection === "shelf" && <ShelfView key="shelf" />}
                   </AnimatePresence>
                 </motion.div>

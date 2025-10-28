@@ -30,11 +30,14 @@ type Project = {
   end_date: string | null;
 };
 
-type Note = {
+type WorkItem = {
   id: number;
-  timestamp: string;
+  completed_at: string;
+  started_at: string | null;
+  status: string;
   project_id: number;
   summary: string;
+  completed_summary: string | null;
   tags: string[];
 };
 
@@ -74,19 +77,20 @@ function getMarkdownContent(slug: string): string | null {
   }
 }
 
-// Fetch notes for this project
-async function getProjectNotes(projectId: number): Promise<Note[]> {
+// Fetch work items for this project (completed only)
+async function getProjectNotes(projectId: number): Promise<WorkItem[]> {
   const { data, error } = await supabaseClient
     .from('notes')
     .select('*')
     .eq('project_id', projectId)
-    .order('timestamp', { ascending: false });
+    .eq('status', 'completed')
+    .order('completed_at', { ascending: false });
 
   if (error || !data) {
     return [];
   }
 
-  return data as Note[];
+  return data as WorkItem[];
 }
 
 // Generate metadata for SEO
