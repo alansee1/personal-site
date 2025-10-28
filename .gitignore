@@ -46,3 +46,6 @@ dev_diary/
 
 # database backups (local only)
 *.backup
+
+# SEO strategy (local planning)
+SEO_STRATEGY.md

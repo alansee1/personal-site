@@ -15,30 +15,30 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Alan See",
-  description: "Making stuff on the internet. Explore projects, blog posts, resume, notes, and curated shelf of books and articles.",
-  keywords: ["Alan See", "portfolio", "projects", "blog"],
+  description: "Alan See - Building stuff on the internet. Explore projects, blog posts about web development, and developer tools.",
+  keywords: ["Alan See", "developer", "portfolio", "projects", "blog", "web development", "Next.js", "TypeScript"],
   authors: [{ name: "Alan See" }],
   creator: "Alan See",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://alansee.dev",
+    url: "https://www.alansee.dev",
     siteName: "Alan See",
     title: "Alan See",
-    description: "Making stuff on the internet. Explore projects, blog posts, resume, notes, and curated shelf of books and articles.",
+    description: "Alan See - Building stuff on the internet. Explore projects, blog posts about web development, and developer tools.",
   },
   twitter: {
     card: "summary_large_image",
     creator: "@seealanh",
     title: "Alan See",
-    description: "Making stuff on the internet. Explore projects, blog posts, resume, notes, and curated shelf of books and articles.",
+    description: "Alan See - Building stuff on the internet. Explore projects, blog posts about web development, and developer tools.",
   },
   robots: {
     index: true,
     follow: true,
   },
   alternates: {
-    canonical: "https://alansee.dev",
+    canonical: "https://www.alansee.dev",
   },
 };
 
@@ -58,13 +58,13 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Person",
               name: "Alan See",
-              url: "https://alansee.dev",
+              url: "https://www.alansee.dev",
               sameAs: [
                 "https://github.com/alansee1",
                 "https://www.linkedin.com/in/alan-see-880bb8140/",
                 "https://twitter.com/seealanh",
               ],
-              description: "Making stuff on the internet.",
+              description: "Building stuff on the internet.",
             }),
           }}
         />
