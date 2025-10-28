@@ -296,6 +296,12 @@ export default function NotesView() {
       {/* Table */}
       <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
         <table className="w-full text-sm min-w-[800px]">
+        <colgroup>
+          <col className="w-[120px]" />
+          <col className="w-[160px]" />
+          <col />
+          <col className="w-[280px]" />
+        </colgroup>
         <thead>
           <tr className="border-b border-zinc-800 text-left">
             <th
@@ -332,7 +338,7 @@ export default function NotesView() {
                 </td>
                 <td className="py-3 align-top">
                   {note.tags && note.tags.length > 0 && (
-                    <div className="flex gap-1.5 flex-wrap">
+                    <div className="inline-flex gap-1.5 flex-wrap">
                       {note.tags.map((tag) => (
                         <button
                           key={tag}
@@ -353,7 +359,7 @@ export default function NotesView() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+      <div className="flex items-center justify-between">
         <div className="text-sm text-zinc-500">
           Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedNotes.length)} of {filteredAndSortedNotes.length} notes
         </div>
