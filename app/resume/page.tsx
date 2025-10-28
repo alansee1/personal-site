@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Resume - Alan See",
     description: "Professional experience and timeline. Senior Application Support Engineer at Lively with expertise in SQL and databases.",
-    url: "https://alansee.dev/resume",
+    url: "https://www.alansee.dev/resume",
     type: "profile",
   },
   twitter: {

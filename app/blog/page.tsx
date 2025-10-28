@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Blog - Alan See",
     description: "Thoughts and writings on technology, software engineering, and life experiences.",
-    url: "https://alansee.dev/blog",
+    url: "https://www.alansee.dev/blog",
     type: "website",
   },
   twitter: {

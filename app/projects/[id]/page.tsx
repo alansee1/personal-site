@@ -107,7 +107,7 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
       title: `${project.title} | Alan See`,
       description: project.description,
       type: 'article',
-      url: `https://alansee.dev/projects/${slug}`,
+      url: `https://www.alansee.dev/projects/${slug}`,
     },
     twitter: {
       card: 'summary_large_image',
