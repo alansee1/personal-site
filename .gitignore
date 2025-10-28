@@ -41,7 +41,8 @@ yarn-error.log*
 next-env.d.ts
 
 # personal dev diary (local only)
-DEV_DIARY.md
+# Development diary - local context for Claude
+dev_diary/
 
 # database backups (local only)
 *.backup
