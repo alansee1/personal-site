@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import NoteRowSkeleton from "./NoteRowSkeleton";
 
 type Note = {
   id: number;
@@ -172,8 +173,56 @@ export default function NotesView() {
   // Loading state
   if (loading) {
     return (
-      <div className="w-full max-w-6xl flex items-center justify-center py-20">
-        <div className="text-zinc-400 text-lg">Loading notes...</div>
+      <div className="w-full max-w-6xl space-y-6">
+        {/* Filters (disabled during loading) */}
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <input
+              type="text"
+              placeholder="Search notes..."
+              disabled
+              className="flex-1 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-300 placeholder-zinc-600 opacity-50 cursor-not-allowed"
+            />
+            <select
+              disabled
+              className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-300 opacity-50 cursor-not-allowed"
+            >
+              <option>All Projects</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Table with skeleton rows */}
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <table className="w-full text-sm min-w-[800px]">
+            <thead>
+              <tr className="border-b border-zinc-800 text-left">
+                <th className="pb-3 pr-6 font-normal text-zinc-500 text-xs uppercase tracking-wider">
+                  Time
+                </th>
+                <th className="pb-3 pr-6 font-normal text-zinc-500 text-xs uppercase tracking-wider">
+                  Project
+                </th>
+                <th className="pb-3 pr-6 font-normal text-zinc-500 text-xs uppercase tracking-wider">
+                  Summary
+                </th>
+                <th className="pb-3 font-normal text-zinc-500 text-xs uppercase tracking-wider">
+                  Tags
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <NoteRowSkeleton />
+              <NoteRowSkeleton />
+              <NoteRowSkeleton />
+              <NoteRowSkeleton />
+              <NoteRowSkeleton />
+              <NoteRowSkeleton />
+              <NoteRowSkeleton />
+              <NoteRowSkeleton />
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import ProjectCardSkeleton from "./ProjectCardSkeleton";
 
 type Project = {
   id: number;
@@ -87,7 +88,11 @@ export default function ProjectsView() {
   if (loading) {
     return (
       <div className="w-full max-w-4xl">
-        <p className="text-zinc-400">Loading projects...</p>
+        <div className="space-y-6">
+          <ProjectCardSkeleton />
+          <ProjectCardSkeleton />
+          <ProjectCardSkeleton />
+        </div>
       </div>
     );
   }

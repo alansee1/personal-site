@@ -47,3 +47,17 @@ body {
 .scrollbar-visible::-webkit-scrollbar-thumb:hover {
   background: #71717a;
 }
+
+/* Shimmer loading animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1s linear infinite;
+}
