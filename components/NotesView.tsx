@@ -180,14 +180,17 @@ export default function NotesView() {
             <input
               type="text"
               placeholder="Search notes..."
+              value=""
               disabled
+              readOnly
               className="flex-1 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-300 placeholder-zinc-600 opacity-50 cursor-not-allowed"
             />
             <select
+              value=""
               disabled
               className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-300 opacity-50 cursor-not-allowed"
             >
-              <option>All Projects</option>
+              <option value="">All Projects</option>
             </select>
           </div>
         </div>
