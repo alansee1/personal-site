@@ -41,6 +41,7 @@ export default function Home() {
   const [isReturning, setIsReturning] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false); // Animation lock
   const [hideMorphedButton, setHideMorphedButton] = useState(false); // Hide button after morph completes
+  const [isTransitioningToDetail, setIsTransitioningToDetail] = useState(false); // Track project/blog detail transitions
 
   // Mark component as mounted and check sessionStorage (runs first, prevents hydration mismatch)
   useEffect(() => {
@@ -537,7 +538,7 @@ export default function Home() {
                 key={activeSection}
                 className="absolute inset-0 w-full min-h-screen bg-transparent flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto"
               >
-                {/* Back button */}
+                {/* Back button - keep visible during detail transitions */}
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: isExiting ? 0 : 1 }}
@@ -552,7 +553,9 @@ export default function Home() {
                 <motion.h1
                   layoutId={activeSection}
                   exit={{ opacity: 1 }}
+                  animate={{ opacity: isTransitioningToDetail ? 0 : 1 }}
                   transition={{
+                    opacity: { duration: 0.3 },
                     layout: {
                       duration: 0.8,
                       ease: [0.43, 0.13, 0.23, 0.96],
@@ -572,8 +575,14 @@ export default function Home() {
                   className="w-full"
                 >
                   <AnimatePresence mode="wait">
-                    {activeSection === "projects" && <ProjectsView key="projects" />}
-                    {activeSection === "blog" && <BlogView key="blog" />}
+                    {activeSection === "projects" && (
+                      <ProjectsView
+                        key="projects"
+                        isEmbedded={true}
+                        onTransitionStart={() => setIsTransitioningToDetail(true)}
+                      />
+                    )}
+                    {activeSection === "blog" && <BlogView key="blog" isEmbedded={true} />}
                     {activeSection === "resume" && <ResumeView key="resume" />}
                     {activeSection === "work" && <NotesView key="work" />}
                     {activeSection === "shelf" && <ShelfView key="shelf" />}

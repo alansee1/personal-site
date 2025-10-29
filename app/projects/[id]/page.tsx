@@ -1,6 +1,5 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { Metadata } from "next";
 import fs from "fs";
 import path from "path";
@@ -9,6 +8,9 @@ import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 import { supabaseClient } from "@/lib/supabase";
 import WorkLogSection from "./WorkLogSection";
+import ProjectHeader from "./ProjectHeader";
+import ProjectContent from "./ProjectContent";
+import BackButton from "./BackButton";
 import "highlight.js/styles/github-dark.css";
 
 interface ProjectPageProps {
@@ -151,65 +153,22 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     <div className="min-h-screen bg-black text-white">
       <div className="w-full min-h-screen flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto overflow-x-hidden">
         {/* Back button */}
-        <Link
-          href="/projects"
-          className="text-white text-sm hover:text-zinc-400 transition-colors mb-8 cursor-pointer"
-        >
-          ← back
-        </Link>
+        <BackButton slug={slug} />
 
         {/* Project Header */}
-        <div className="flex items-start justify-between mb-6 w-full max-w-4xl">
-          <h1 className="text-5xl md:text-6xl font-light tracking-wide text-white">{project.title}</h1>
-          <span className={`text-xs px-3 py-1.5 rounded border capitalize ${getStatusColor(project.status)}`}>
-            {project.status}
-          </span>
-        </div>
+        <ProjectHeader
+          slug={slug}
+          title={project.title}
+          status={project.status}
+          statusColor={getStatusColor(project.status)}
+          description={project.description}
+        />
 
-        <div className="w-full max-w-4xl">
-          <p className="text-xl text-zinc-400 mb-6 leading-relaxed">{project.description}</p>
-
-          {/* Tech Stack */}
-          <div className="mb-8">
-            <h2 className="text-sm text-zinc-500 uppercase tracking-wider mb-3">Tech Stack</h2>
-            <div className="flex gap-2 flex-wrap">
-              {project.tech.map((tech) => (
-                <span
-                  key={tech}
-                  className="text-sm px-3 py-1.5 bg-zinc-900 text-zinc-300 rounded border border-zinc-800"
-                >
-                  {tech}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Links */}
-          {(project.url || project.github) && (
-            <div className="flex gap-4 mb-8">
-              {project.url && (
-                <a
-                  href={project.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 bg-white text-black rounded hover:bg-zinc-200 transition-colors text-sm font-medium"
-                >
-                  View Live Site →
-                </a>
-              )}
-              {project.github && (
-                <a
-                  href={project.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 border border-zinc-700 text-white rounded hover:border-zinc-500 transition-colors text-sm"
-                >
-                  View on GitHub →
-                </a>
-              )}
-            </div>
-          )}
-        </div>
+        <ProjectContent
+          tech={project.tech}
+          url={project.url}
+          github={project.github}
+        />
 
         {/* Markdown Content */}
         {markdownContent ? (

@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 import blogData from "@/data/blog.json";
+import BlogHeader from "./BlogHeader";
 import "highlight.js/styles/github-dark.css";
 
 interface PageProps {
@@ -60,35 +61,12 @@ export default function BlogPostPage({ params }: PageProps) {
         </Link>
 
         {/* Article header */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="w-full max-w-4xl mb-12"
-        >
-          <h1 className="text-5xl md:text-6xl font-light tracking-wide text-white mb-6">
-            {post.title}
-          </h1>
-
-          <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-400 mb-6">
-            <time dateTime={post.date}>{formatDate(post.date)}</time>
-            <span>•</span>
-            <span>{readingTime} min read</span>
-          </div>
-
-          {post.tags.length > 0 && (
-            <div className="flex gap-2 flex-wrap">
-              {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs px-3 py-1.5 bg-zinc-900 text-zinc-300 rounded border border-zinc-800"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </motion.div>
+        <BlogHeader
+          title={post.title}
+          date={formatDate(post.date)}
+          readingTime={readingTime}
+          tags={post.tags}
+        />
 
         {/* Article content */}
         <motion.article
