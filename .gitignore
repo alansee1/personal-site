@@ -46,6 +46,7 @@ dev_diary/
 
 # database backups (local only)
 *.backup
+scripts/backfill-backup.json
 
 # SEO strategy (local planning)
 SEO_STRATEGY.md
