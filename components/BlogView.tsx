@@ -15,7 +15,7 @@ interface BlogViewProps {
 export default function BlogView({ posts, onTransitionStart, isEmbedded = false }: BlogViewProps) {
   const [transitioningSlug, setTransitioningSlug] = useState<string | null>(null);
   const [morphTarget, setMorphTarget] = useState({ x: 0, y: 0, width: 0 });
-  const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const cardRefs = useRef<{ [key: string]: HTMLElement | null }>({});
   const router = useRouter();
 
   // Use provided posts or fall back to blog.json (for client-side rendering from homepage)
