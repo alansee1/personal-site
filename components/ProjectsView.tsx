@@ -144,15 +144,16 @@ export default function ProjectsView({ onTransitionStart, isEmbedded = false }: 
       const cardRect = cardElement.getBoundingClientRect();
 
       // Try to use measured position from detail page, fall back to estimates
-      let targetTop = 88;
-      let targetLeft = 32;
+      // Note: These estimates need to account for card padding (24px) + 1px border adjustment
+      const cardPadding = 24;
+      let targetTop = 88 - cardPadding - 1; // 63px - position for card border so content is at 88
+      let targetLeft = 32 - cardPadding - 1; // 7px - position for card border so content is at 32
       let targetWidth = Math.min(window.innerWidth - 64, 896);
 
       const storedPosition = sessionStorage.getItem('project-header-position');
       if (storedPosition) {
         try {
           const measurements = JSON.parse(storedPosition);
-          const cardPadding = 24;
 
           // If we have offset from back button, use that for more accuracy
           // But only if we're on standalone /projects route (not embedded in homepage)
