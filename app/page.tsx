@@ -39,6 +39,7 @@ export default function Home() {
   const [returningFrom, setReturningFrom] = useState<SectionType>(null);
   const [isExiting, setIsExiting] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
+  const [isDirectReturn, setIsDirectReturn] = useState(false); // True when returning from standalone page
   const [isAnimating, setIsAnimating] = useState(false); // Animation lock
   const [hideMorphedButton, setHideMorphedButton] = useState(false); // Hide button after morph completes
   const [isTransitioningToDetail, setIsTransitioningToDetail] = useState(false); // Track project/blog detail transitions
@@ -65,35 +66,28 @@ export default function Home() {
       setTypingDone(false); // Always start with homepage hidden during animation
 
       if (isFromDirect) {
-        // For direct routes, we need to establish the layout connection first
-        setActiveSection(fromSection);
+        // Standalone faded content but kept header visible
+        setHideMorphedButton(false); // Show button for morph
         setReturningFrom(fromSection);
-        setHideMorphedButton(true); // Hide the button since we're in the section
-        setIsExiting(false); // Start with section fully visible
-        setIsReturning(true); // Mark as returning to hide ALL homepage elements
+        setIsReturning(true);
+        setIsDirectReturn(true); // Flag so we don't render back button/content
+        setActiveSection(fromSection); // Render section header immediately
 
         // Clean URL
         window.history.replaceState({}, '', '/');
 
-        // Give time for the layout system to establish the connection
+        // Use double RAF to ensure header is painted before morphing (fixes Chrome production bug)
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            // Now start the exit sequence
-            setHideMorphedButton(false); // Show button for morph
-            setIsExiting(true);
+            setActiveSection(null); // Clear to trigger morph
 
-            // Wait for content to fade out
+            // Wait for morph to complete
             setTimeout(() => {
-              setActiveSection(null);
-              setIsExiting(false);
-
-              // Clear returning flag and show homepage after morph
-              setTimeout(() => {
-                setIsReturning(false);
-                setReturningFrom(null);
-                setTypingDone(true);
-              }, 1400);
-            }, 300);
+              setIsReturning(false);
+              setReturningFrom(null);
+              setIsDirectReturn(false);
+              setTypingDone(true);
+            }, NAV_TIMING.MORPH_DELAY + NAV_TIMING.MORPH_DURATION);
           });
         });
       } else {
@@ -466,24 +460,29 @@ export default function Home() {
 
             {/* Social icons */}
             <div className="flex items-center gap-8 mb-6">
-              {socialLinks.map((link, index) => (
-                <motion.a
-                  key={link.name}
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  initial={{ opacity: (hasSeenAnimation && !isReturning) ? 1 : 0, y: hasSeenAnimation ? 0 : 20 }}
-                  animate={{ opacity: activeSection || isReturning ? 0 : 1, y: 0 }}
-                  transition={{
-                    duration: 0.5,
-                    delay: activeSection ? 0 : (isReturning ? 1.4 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + index * 0.1))
-                  }}
-                  className="text-white hover:text-zinc-400 transition-colors inline-block hover:scale-125 hover:-translate-y-1 active:scale-90"
-                  style={{ pointerEvents: typingDone ? "auto" : "none" }}
-                >
-                  <Icon icon={link.icon} width="24" height="24" />
-                </motion.a>
-              ))}
+              {socialLinks.map((link, index) => {
+                // Calculate delay - ensuring no stagger when returning
+                const fadeInDelay = activeSection ? 0 : (isReturning ? NAV_TIMING.HOME_FADE_IN_DELAY / 1000 : (hasSeenAnimation ? 0 : (fullName.length + 1) * 0.1 + 0.3 + index * 0.1));
+
+                return (
+                  <motion.a
+                    key={link.name}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    initial={{ opacity: (hasSeenAnimation && !isReturning) ? 1 : 0, y: hasSeenAnimation ? 0 : 20 }}
+                    animate={{ opacity: activeSection || isReturning ? 0 : 1, y: 0 }}
+                    transition={{
+                      duration: 0.5,
+                      delay: fadeInDelay
+                    }}
+                    className="text-white hover:text-zinc-400 transition-colors inline-block hover:scale-125 hover:-translate-y-1 active:scale-90"
+                    style={{ pointerEvents: typingDone ? "auto" : "none" }}
+                  >
+                    <Icon icon={link.icon} width="24" height="24" />
+                  </motion.a>
+                );
+              })}
             </div>
 
             {/* Navigation tabs */}
@@ -491,17 +490,22 @@ export default function Home() {
               className="flex items-center gap-8"
               style={{ pointerEvents: typingDone ? "auto" : "none" }}
             >
-              {sections.map((section, index) => (
+              {sections.map((section, index) => {
+                const isReturningToThisButton = returningFrom === section.id;
+                return (
                 <motion.p
                   key={section.name}
                   layoutId={section.id}
                   onClick={() => handleSectionClick(section.id as Section)}
-                  initial={{ opacity: (hasSeenAnimation && !isReturning) ? 1 : 0, y: hasSeenAnimation ? 0 : 10 }}
+                  initial={{
+                    opacity: isReturningToThisButton ? 1 : ((hasSeenAnimation && !isReturning) ? 1 : 0),
+                    y: hasSeenAnimation ? 0 : 10
+                  }}
                   animate={{
                     opacity: activeSection
                       ? (activeSection === section.id ? 1 : 0)  // Active button stays visible for morph, others fade immediately
                       : (returningFrom === section.id ? 0 : 1), // Keep selected button hidden during entire return
-                    y: 0
+                    y: (activeSection === section.id) ? undefined : 0  // Don't animate y when morphing
                   }}
                   transition={{
                     opacity: {
@@ -514,7 +518,8 @@ export default function Home() {
                     },
                     layout: { duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96], delay: activeSection ? 0.5 : 0 }
                   }}
-                  whileHover={{ y: -2 }}
+                  whileHover={(activeSection === section.id) ? {} : { y: -2 }}
+                  whileTap={{ scale: 1 }}
                   className="text-white text-lg hover:text-zinc-400 transition-colors cursor-pointer"
                   style={{
                     pointerEvents: (typingDone && !isAnimating) ? "auto" : "none",
@@ -523,7 +528,8 @@ export default function Home() {
                 >
                   {section.name}
                 </motion.p>
-              ))}
+                );
+              })}
             </motion.div>
 
             {/* Spacer */}
@@ -536,15 +542,28 @@ export default function Home() {
             {activeSection && (
               <motion.div
                 key={activeSection}
-                className="absolute inset-0 w-full min-h-screen bg-transparent flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto"
+                initial={{
+                  backgroundColor: isDirectReturn ? '#000000' : 'transparent'
+                }}
+                animate={{
+                  backgroundColor: 'transparent'
+                }}
+                transition={{
+                  backgroundColor: { duration: 0.3, delay: isDirectReturn ? 0 : 0 }
+                }}
+                className="absolute inset-0 w-full min-h-screen flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto"
               >
-                {/* Back button - keep visible during detail transitions */}
+                {/* Back button - always render but make invisible for direct returns */}
                 <motion.p
-                  initial={{ opacity: 0 }}
+                  initial={{ opacity: isReturning ? 1 : 0 }}
                   animate={{ opacity: isExiting ? 0 : 1 }}
                   transition={{ duration: 0.3, delay: isExiting ? 0 : 1.5 }}
                   onClick={handleBack}
                   className="text-white text-sm hover:text-zinc-400 transition-colors mb-8 cursor-pointer"
+                  style={{
+                    visibility: isDirectReturn ? 'hidden' : 'visible',
+                    pointerEvents: isDirectReturn ? 'none' : 'auto'
+                  }}
                 >
                   ← back
                 </motion.p>
@@ -552,6 +571,7 @@ export default function Home() {
                 {/* Section header with layoutId matching the nav button */}
                 <motion.h1
                   layoutId={activeSection}
+                  initial={{ opacity: isReturning ? 1 : undefined }}
                   exit={{ opacity: 1 }}
                   animate={{ opacity: isTransitioningToDetail ? 0 : 1 }}
                   transition={{
@@ -567,27 +587,30 @@ export default function Home() {
                   {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
                 </motion.h1>
 
-                {/* Section content */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: isExiting ? 0 : 1 }}
-                  transition={{ duration: 0.3, delay: isExiting ? 0 : 1.5 }}
-                  className="w-full"
-                >
-                  <AnimatePresence mode="wait">
-                    {activeSection === "projects" && (
-                      <ProjectsView
-                        key="projects"
-                        isEmbedded={true}
-                        onTransitionStart={() => setIsTransitioningToDetail(true)}
-                      />
-                    )}
-                    {activeSection === "blog" && <BlogView key="blog" isEmbedded={true} />}
-                    {activeSection === "resume" && <ResumeView key="resume" />}
-                    {activeSection === "work" && <NotesView key="work" />}
-                    {activeSection === "shelf" && <ShelfView key="shelf" />}
-                  </AnimatePresence>
-                </motion.div>
+                {/* Section content - don't render for direct returns (already faded on standalone) */}
+                {!isDirectReturn && (
+                  <motion.div
+                    initial={{ opacity: isReturning ? 1 : 0 }}
+                    animate={{ opacity: isExiting ? 0 : 1 }}
+                    transition={{ duration: 0.3, delay: isExiting ? 0 : 1.5 }}
+                    className="w-full"
+                  >
+                    <AnimatePresence mode="wait">
+                      {activeSection === "projects" && (
+                        <ProjectsView
+                          key="projects"
+                          isEmbedded={true}
+                          skipReverseAnimation={isReturning}
+                          onTransitionStart={() => setIsTransitioningToDetail(true)}
+                        />
+                      )}
+                      {activeSection === "blog" && <BlogView key="blog" isEmbedded={true} skipReverseAnimation={isReturning} />}
+                      {activeSection === "resume" && <ResumeView key="resume" />}
+                      {activeSection === "work" && <NotesView key="work" />}
+                      {activeSection === "shelf" && <ShelfView key="shelf" />}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

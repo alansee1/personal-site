@@ -20,9 +20,10 @@ type Project = {
 type ProjectsViewProps = {
   onTransitionStart?: () => void;
   isEmbedded?: boolean; // True when rendered in homepage, false when standalone /projects route
+  skipReverseAnimation?: boolean; // True when rendering during section exit animation (fromDirect return)
 };
 
-export default function ProjectsView({ onTransitionStart, isEmbedded = false }: ProjectsViewProps = {}) {
+export default function ProjectsView({ onTransitionStart, isEmbedded = false, skipReverseAnimation = false }: ProjectsViewProps = {}) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,25 +33,24 @@ export default function ProjectsView({ onTransitionStart, isEmbedded = false }: 
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const router = useRouter();
 
-  // Debug: log when transitioningSlug changes
-  useEffect(() => {
-    console.log('🔄 transitioningSlug changed:', transitioningSlug);
-  }, [transitioningSlug]);
-
   // Check for reverse animation on mount
   useEffect(() => {
+    // Skip reverse animation check if we're rendering during section exit
+    if (skipReverseAnimation) {
+      return;
+    }
+
     const isReverseAnimation = sessionStorage.getItem('reverse-animation-active') === 'true';
     const slug = sessionStorage.getItem('reverse-animation-slug');
 
     if (isReverseAnimation && slug) {
-      console.log('🔙 Reverse animation detected for:', slug);
       setReverseAnimatingSlug(slug);
 
       // Clear the flags
       sessionStorage.removeItem('reverse-animation-active');
       sessionStorage.removeItem('reverse-animation-slug');
     }
-  }, []);
+  }, [skipReverseAnimation]);
 
   // Trigger reverse animation after projects load
   useEffect(() => {
@@ -58,9 +58,8 @@ export default function ProjectsView({ onTransitionStart, isEmbedded = false }: 
       // Wait for card refs to be set
       setTimeout(() => {
         const cardElement = cardRefs.current[reverseAnimatingSlug];
-        if (cardElement) {
-          console.log('🎬 Starting reverse animation for:', reverseAnimatingSlug);
 
+        if (cardElement) {
           // Start animation back to normal after a brief delay
           setTimeout(() => {
             setReverseAnimatingSlug(null);
@@ -161,36 +160,15 @@ export default function ProjectsView({ onTransitionStart, isEmbedded = false }: 
 
           if (useRelativePositioning) {
             const backButton = document.querySelector('p.cursor-pointer, a[href="/projects"]');
-            console.log('🔍 Back button search:', {
-              found: !!backButton,
-              selector: 'p.cursor-pointer, a[href="/projects"]',
-              currentPath: window.location.pathname,
-              isEmbedded,
-              useRelativePositioning
-            });
 
             if (backButton) {
               const backRect = backButton.getBoundingClientRect();
-              console.log('📐 Back button position:', {
-                top: Math.round(backRect.top),
-                left: Math.round(backRect.left),
-                tagName: backButton.tagName,
-                className: backButton.className
-              });
 
               // Calculate target based on back button position + offset - card padding + 1px adjustment
               targetTop = backRect.top + measurements.offsetFromBackButton.top - cardPadding - 1;
               targetLeft = backRect.left + measurements.offsetFromBackButton.left - cardPadding - 1;
               targetWidth = measurements.width;
-
-              console.log('✅ Using back button relative positioning:', {
-                targetTop,
-                targetLeft,
-                targetWidth,
-                offset: measurements.offsetFromBackButton
-              });
             } else {
-              console.warn('⚠️ Back button not found! Using absolute positioning');
               targetTop = measurements.top - cardPadding - 1;
               targetLeft = measurements.left - cardPadding - 1;
               targetWidth = measurements.width;
@@ -200,18 +178,10 @@ export default function ProjectsView({ onTransitionStart, isEmbedded = false }: 
             targetTop = measurements.top - cardPadding - 1;
             targetLeft = measurements.left - cardPadding - 1;
             targetWidth = measurements.width;
-            console.log('📍 Using absolute positioning:', {
-              isEmbedded,
-              hasOffset: !!measurements.offsetFromBackButton,
-              targetTop,
-              targetLeft
-            });
           }
         } catch (e) {
-          console.warn('Failed to parse stored header position');
+          // Silently fall back to defaults
         }
-      } else {
-        console.warn('⚠️ No stored position found, using estimates');
       }
 
       const morphDeltas = {
@@ -229,89 +199,6 @@ export default function ProjectsView({ onTransitionStart, isEmbedded = false }: 
     if (onTransitionStart) {
       onTransitionStart();
     }
-
-    // Log initial card state
-    const initialCardElement = cardRefs.current[slug];
-    if (initialCardElement) {
-      const flexContainer = initialCardElement.querySelector('.flex');
-      const titleElement = initialCardElement.querySelector('h3');
-      const badgeElement = initialCardElement.querySelector('span');
-
-      if (flexContainer && titleElement && badgeElement) {
-        const flexRect = flexContainer.getBoundingClientRect();
-        const titleRect = titleElement.getBoundingClientRect();
-        const badgeRect = badgeElement.getBoundingClientRect();
-        const titleStyles = window.getComputedStyle(titleElement);
-        const flexStyles = window.getComputedStyle(flexContainer);
-
-        console.log('🚀 INITIAL CARD STATE (t=0ms):', {
-          flexContainer: {
-            width: Math.round(flexRect.width),
-            left: Math.round(flexRect.left),
-            gap: flexStyles.gap,
-            justifyContent: flexStyles.justifyContent,
-          },
-          title: {
-            width: Math.round(titleRect.width),
-            left: Math.round(titleRect.left),
-            fontSize: titleStyles.fontSize,
-            flex: titleStyles.flex,
-            flexGrow: titleStyles.flexGrow,
-            flexShrink: titleStyles.flexShrink,
-            flexBasis: titleStyles.flexBasis,
-          },
-          badge: {
-            width: Math.round(badgeRect.width),
-            left: Math.round(badgeRect.left),
-          }
-        });
-      }
-    }
-
-    // Timeline: 300ms fade + 500ms delay + 800ms morph = 1600ms
-    // Check at end of morph (1400ms) to see if animation is complete
-    setTimeout(() => {
-      const cardElement = cardRefs.current[slug];
-      if (cardElement) {
-        const flexContainer = cardElement.querySelector('.flex');
-        const titleElement = cardElement.querySelector('h3');
-        const badgeElement = cardElement.querySelector('span');
-
-        if (flexContainer && titleElement && badgeElement) {
-          const flexRect = flexContainer.getBoundingClientRect();
-          const titleRect = titleElement.getBoundingClientRect();
-          const badgeRect = badgeElement.getBoundingClientRect();
-          const titleStyles = window.getComputedStyle(titleElement);
-          const flexStyles = window.getComputedStyle(flexContainer);
-
-          console.log('📏 MORPHING STATE (t=1400ms - COMPLETE):', {
-            flexContainer: {
-              width: Math.round(flexRect.width),
-              left: Math.round(flexRect.left),
-              gap: flexStyles.gap,
-            },
-            title: {
-              width: Math.round(titleRect.width),
-              left: Math.round(titleRect.left),
-              fontSize: titleStyles.fontSize,
-              lineHeight: titleStyles.lineHeight,
-              height: Math.round(titleRect.height),
-              flex: titleStyles.flex,
-              flexGrow: titleStyles.flexGrow,
-              flexShrink: titleStyles.flexShrink,
-              flexBasis: titleStyles.flexBasis,
-            },
-            badge: {
-              width: Math.round(badgeRect.width),
-              left: Math.round(badgeRect.left),
-            },
-            spacing: {
-              gapBetween: Math.round(badgeRect.left - titleRect.right),
-            }
-          });
-        }
-      }
-    }, 1400);
 
     // Navigate at 1200ms so page loads during morph
     setTimeout(() => {

@@ -10,9 +10,10 @@ interface BlogViewProps {
   posts?: BlogPostMetadata[];
   onTransitionStart?: () => void;
   isEmbedded?: boolean; // True when rendered in homepage, false when standalone /blog route
+  skipReverseAnimation?: boolean; // True when rendering during section exit animation (fromDirect return)
 }
 
-export default function BlogView({ posts, onTransitionStart, isEmbedded = false }: BlogViewProps) {
+export default function BlogView({ posts, onTransitionStart, isEmbedded = false, skipReverseAnimation = false }: BlogViewProps) {
   const [transitioningSlug, setTransitioningSlug] = useState<string | null>(null);
   const [morphTarget, setMorphTarget] = useState({ x: 0, y: 0, width: 0 });
   const cardRefs = useRef<{ [key: string]: HTMLElement | null }>({});
@@ -50,34 +51,14 @@ export default function BlogView({ posts, onTransitionStart, isEmbedded = false 
 
           if (useRelativePositioning) {
             const backButton = document.querySelector('a[href="/blog"]');
-            console.log('🔍 Back button search:', {
-              found: !!backButton,
-              selector: 'a[href="/blog"]',
-              currentPath: window.location.pathname,
-              isEmbedded,
-              useRelativePositioning
-            });
 
             if (backButton) {
               const backRect = backButton.getBoundingClientRect();
-              console.log('📐 Back button position:', {
-                top: Math.round(backRect.top),
-                left: Math.round(backRect.left),
-                tagName: backButton.tagName,
-              });
 
               targetTop = backRect.top + measurements.offsetFromBackButton.top - cardPadding - 1;
               targetLeft = backRect.left + measurements.offsetFromBackButton.left - cardPadding - 1;
               targetWidth = measurements.width;
-
-              console.log('✅ Using back button relative positioning:', {
-                targetTop,
-                targetLeft,
-                targetWidth,
-                offset: measurements.offsetFromBackButton
-              });
             } else {
-              console.warn('⚠️ Back button not found! Using absolute positioning');
               targetTop = measurements.top - cardPadding - 1;
               targetLeft = measurements.left - cardPadding - 1;
               targetWidth = measurements.width;
@@ -86,18 +67,10 @@ export default function BlogView({ posts, onTransitionStart, isEmbedded = false 
             targetTop = measurements.top - cardPadding - 1;
             targetLeft = measurements.left - cardPadding - 1;
             targetWidth = measurements.width;
-            console.log('📍 Using absolute positioning:', {
-              isEmbedded,
-              hasOffset: !!measurements.offsetFromBackButton,
-              targetTop,
-              targetLeft
-            });
           }
         } catch (e) {
-          console.warn('Failed to parse stored blog header position');
+          // Silently fall back to defaults
         }
-      } else {
-        console.warn('⚠️ No stored position found, using estimates');
       }
 
       const morphDeltas = {
@@ -110,53 +83,6 @@ export default function BlogView({ posts, onTransitionStart, isEmbedded = false 
     }
 
     setTransitioningSlug(slug);
-
-    // Log initial card state
-    const initialCardElement = cardRefs.current[slug];
-    if (initialCardElement) {
-      const h2 = initialCardElement.querySelector('h2');
-      const tags = initialCardElement.querySelectorAll('span');
-
-      if (h2) {
-        const h2Rect = h2.getBoundingClientRect();
-        const h2Styles = window.getComputedStyle(h2);
-
-        console.log('🚀 INITIAL CARD STATE (t=0ms):', {
-          title: {
-            width: Math.round(h2Rect.width),
-            left: Math.round(h2Rect.left),
-            fontSize: h2Styles.fontSize,
-          },
-          tags: {
-            count: tags.length,
-          }
-        });
-      }
-    }
-
-    // Check dimensions at morph completion
-    setTimeout(() => {
-      const cardElement = cardRefs.current[slug];
-      if (cardElement) {
-        const h2 = cardElement.querySelector('h2');
-
-        if (h2) {
-          const h2Rect = h2.getBoundingClientRect();
-          const h2Styles = window.getComputedStyle(h2);
-
-          console.log('📏 MORPHING STATE (t=1400ms - COMPLETE):', {
-            title: {
-              width: Math.round(h2Rect.width),
-              left: Math.round(h2Rect.left),
-              top: Math.round(h2Rect.top),
-              height: Math.round(h2Rect.height),
-              fontSize: h2Styles.fontSize,
-              lineHeight: h2Styles.lineHeight,
-            }
-          });
-        }
-      }
-    }, 1400);
 
     if (onTransitionStart) {
       onTransitionStart();
