@@ -9,9 +9,10 @@ type ProjectHeaderProps = {
   status: string;
   statusColor: string;
   description: string;
+  isNavigatingBack?: boolean;
 };
 
-export default function ProjectHeader({ slug, title, status, statusColor, description }: ProjectHeaderProps) {
+export default function ProjectHeader({ slug, title, status, statusColor, description, isNavigatingBack }: ProjectHeaderProps) {
   const headerRef = useRef<HTMLDivElement>(null);
 
   // Measure and store the actual rendered position for morph calculations
@@ -93,16 +94,40 @@ export default function ProjectHeader({ slug, title, status, statusColor, descri
   return (
     <div ref={headerRef} className="w-full max-w-4xl mb-6">
       <div className="flex items-start justify-between mb-6">
-        <h1 className="text-5xl md:text-6xl font-light tracking-wide text-white">
+        <motion.h1
+          initial={false}
+          animate={isNavigatingBack ? {
+            fontSize: "24px",
+          } : undefined}
+          transition={{ duration: 0.8 }}
+          className="font-light tracking-wide text-white text-6xl"
+        >
           {title}
-        </h1>
-        <span className={`text-xs px-3 py-1.5 rounded border capitalize ${statusColor}`}>
+        </motion.h1>
+        <motion.span
+          initial={false}
+          animate={isNavigatingBack ? {
+            paddingLeft: "8px",
+            paddingRight: "8px",
+            paddingTop: "4px",
+            paddingBottom: "4px",
+          } : undefined}
+          transition={{ duration: 0.8 }}
+          className={`text-xs rounded border capitalize px-3 py-1.5 ${statusColor}`}
+        >
           {status}
-        </span>
+        </motion.span>
       </div>
-      <p className="text-xl text-zinc-400 leading-relaxed">
+      <motion.p
+        initial={false}
+        animate={isNavigatingBack ? {
+          fontSize: "16px",
+        } : undefined}
+        transition={{ duration: 0.8 }}
+        className="text-zinc-400 leading-relaxed text-xl"
+      >
         {description}
-      </p>
+      </motion.p>
     </div>
   );
 }

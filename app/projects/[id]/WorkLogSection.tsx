@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 type WorkItem = {
   id: number;
@@ -15,9 +16,10 @@ type WorkItem = {
 
 interface WorkLogSectionProps {
   notes: WorkItem[];
+  isNavigatingBack?: boolean;
 }
 
-export default function WorkLogSection({ notes }: WorkLogSectionProps) {
+export default function WorkLogSection({ notes, isNavigatingBack }: WorkLogSectionProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   if (notes.length === 0) {
@@ -54,7 +56,12 @@ export default function WorkLogSection({ notes }: WorkLogSectionProps) {
   };
 
   return (
-    <div className="w-full max-w-4xl mt-12 mb-12">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isNavigatingBack ? 0 : 1 }}
+      transition={{ duration: isNavigatingBack ? 0.3 : 0.5, delay: isNavigatingBack ? 0 : 0.15 }}
+      className="w-full max-w-4xl mt-12 mb-12"
+    >
       <details open={isOpen} onToggle={(e) => setIsOpen(e.currentTarget.open)}>
         <summary className="cursor-pointer text-2xl font-light text-white mb-6 flex items-center gap-3 list-none">
           <span>Work Log ({notes.length})</span>
@@ -115,6 +122,6 @@ export default function WorkLogSection({ notes }: WorkLogSectionProps) {
           </table>
         </div>
       </details>
-    </div>
+    </motion.div>
   );
 }

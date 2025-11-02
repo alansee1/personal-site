@@ -1,10 +1,10 @@
 ---
-slug: fishy-game
+slug: cosmic-drift
 ---
 
 ## Overview
 
-Classic fish-eating browser game built with HTML5 Canvas
+Space-themed absorption game built with HTML5 Canvas featuring physics-based movement and AI ecosystem
 
 ## What We Built
 
