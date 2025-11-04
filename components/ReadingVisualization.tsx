@@ -35,7 +35,7 @@ export default function ReadingVisualization({ books, isOpen, onClose }: Reading
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredBook, setHoveredBook] = useState<Book | null>(null);
   const particlesRef = useRef<Particle[]>([]);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | undefined>(undefined);
 
   // Calculate stats
   const stats: Stats = {
