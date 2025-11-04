@@ -63,7 +63,7 @@ export default function Home() {
       setShowLine(false);
       setShowContent(true);
       setDisplayedName(fullName);
-      setTypingDone(false); // Always start with homepage hidden during animation
+      setTypingDone(true); // Keep typingDone true - isReturning handles visibility
 
       if (isFromDirect) {
         // Standalone faded content but kept header visible
@@ -86,7 +86,6 @@ export default function Home() {
               setIsReturning(false);
               setReturningFrom(null);
               setIsDirectReturn(false);
-              setTypingDone(true);
             }, NAV_TIMING.MORPH_DELAY + NAV_TIMING.MORPH_DURATION);
           });
         });
@@ -97,7 +96,7 @@ export default function Home() {
         setHideMorphedButton(false); // Button should be visible for morph
         setIsExiting(true);
         setIsReturning(true);
-        setTypingDone(false); // Ensure homepage is hidden initially
+        // typingDone remains true - isReturning handles hiding homepage during animation
 
         // Clean URL
         window.history.replaceState({}, '', '/');
@@ -107,7 +106,6 @@ export default function Home() {
           setActiveSection(null);
           setIsExiting(false);
           setTimeout(() => {
-            setTypingDone(true);
             setIsReturning(false);
             setReturningFrom(null);
             sessionStorage.removeItem('inStateNavigation');
@@ -211,6 +209,8 @@ export default function Home() {
     setIsAnimating(true);
     setHideMorphedButton(false); // Reset before new animation
     setActiveSection(section);
+    // Mark animation as seen when user first navigates
+    setHasSeenAnimation(true);
     // Mark that we're using state-based navigation
     sessionStorage.setItem('inStateNavigation', 'true');
     // Update URL without navigation (for bookmarking/sharing)
