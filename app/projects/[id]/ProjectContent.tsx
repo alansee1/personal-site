@@ -1,22 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 type ProjectContentProps = {
   tech: string[];
   url: string | null;
   github: string | null;
-  isNavigatingBack?: boolean;
 };
 
-export default function ProjectContent({ tech, url, github, isNavigatingBack }: ProjectContentProps) {
+export default function ProjectContent({ tech, url, github }: ProjectContentProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: isNavigatingBack ? 0 : 1 }}
-      transition={{ duration: isNavigatingBack ? 0.3 : 0.5, delay: isNavigatingBack ? 0 : 0.15 }}
-      className="w-full max-w-4xl"
-    >
+    <div className="w-full max-w-4xl">
       {/* Tech Stack */}
       <div className="mb-8">
         <h2 className="text-sm text-zinc-500 uppercase tracking-wider mb-3">Tech Stack</h2>
@@ -57,6 +49,6 @@ export default function ProjectContent({ tech, url, github, isNavigatingBack }: 
           )}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

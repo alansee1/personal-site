@@ -600,7 +600,6 @@ export default function Home() {
                         <ProjectsView
                           key="projects"
                           isEmbedded={true}
-                          skipReverseAnimation={isReturning}
                           onTransitionStart={() => setIsTransitioningToDetail(true)}
                         />
                       )}

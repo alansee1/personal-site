@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import WorkLogSection from "./WorkLogSection";
 import ProjectHeader from "./ProjectHeader";
 import ProjectContent from "./ProjectContent";
@@ -17,7 +16,7 @@ type Project = {
   tech: string[];
   github: string | null;
   url: string | null;
-  media: any[];
+  media: unknown[];
   start_date: string | null;
   end_date: string | null;
 };
@@ -46,16 +45,10 @@ export default function ProjectPageContent({
   notes,
   statusColor,
 }: ProjectPageContentProps) {
-  const [isNavigatingBack, setIsNavigatingBack] = useState(false);
-
-  const handleBackClick = () => {
-    setIsNavigatingBack(true);
-  };
-
   return (
     <>
       {/* Back button */}
-      <BackButton slug={project.slug} onBackClick={handleBackClick} />
+      <BackButton />
 
       {/* Project Header */}
       <ProjectHeader
@@ -64,23 +57,21 @@ export default function ProjectPageContent({
         status={project.status}
         statusColor={statusColor}
         description={project.description}
-        isNavigatingBack={isNavigatingBack}
       />
 
       <ProjectContent
         tech={project.tech}
         url={project.url}
         github={project.github}
-        isNavigatingBack={isNavigatingBack}
       />
 
       {/* Markdown Content */}
       {markdownContent && (
-        <MarkdownSection content={markdownContent} isNavigatingBack={isNavigatingBack} />
+        <MarkdownSection content={markdownContent} />
       )}
 
       {/* Work Log Section (Client Component) */}
-      <WorkLogSection notes={notes} isNavigatingBack={isNavigatingBack} />
+      <WorkLogSection notes={notes} />
     </>
   );
 }

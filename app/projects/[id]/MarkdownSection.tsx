@@ -1,23 +1,16 @@
 "use client";
 
-import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 
 type MarkdownSectionProps = {
   content: string;
-  isNavigatingBack?: boolean;
 };
 
-export default function MarkdownSection({ content, isNavigatingBack }: MarkdownSectionProps) {
+export default function MarkdownSection({ content }: MarkdownSectionProps) {
   return (
-    <motion.article
-      initial={{ opacity: 0 }}
-      animate={{ opacity: isNavigatingBack ? 0 : 1 }}
-      transition={{ duration: isNavigatingBack ? 0.3 : 0.5, delay: isNavigatingBack ? 0 : 0.15 }}
-      className="w-full max-w-4xl prose prose-invert prose-zinc max-w-none"
-    >
+    <article className="w-full max-w-4xl prose prose-invert prose-zinc max-w-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}
@@ -74,6 +67,6 @@ export default function MarkdownSection({ content, isNavigatingBack }: MarkdownS
       >
         {content}
       </ReactMarkdown>
-    </motion.article>
+    </article>
   );
 }

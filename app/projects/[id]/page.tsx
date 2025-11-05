@@ -21,7 +21,7 @@ type Project = {
   tech: string[];
   github: string | null;
   url: string | null;
-  media: any[];
+  media: unknown[];
   start_date: string | null;
   end_date: string | null;
 };
