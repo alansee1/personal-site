@@ -261,8 +261,8 @@ export const shelfData: ShelfData = {
   games: [
     {
       title: "Cosmic Drift",
-      description: "Navigate through space avoiding asteroids",
-      playLink: "/projects/cosmic-drift"
+      description: "Space battle royale absorption game with gravity mechanics and AI opponents",
+      playLink: "/shelf/cosmic-drift"
     }
   ]
 };

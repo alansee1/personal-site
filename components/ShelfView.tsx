@@ -1,14 +1,19 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { shelfData } from "@/data/shelf";
 import BookshelfView from "./BookshelfView";
 
 type Tab = "books" | "games";
 
 export default function ShelfView() {
-  const [activeTab, setActiveTab] = useState<Tab>("books");
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<Tab>(
+    tabParam === "games" ? "games" : "books"
+  );
 
   const { books, games } = shelfData;
 
