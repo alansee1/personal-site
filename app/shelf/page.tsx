@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import SectionLayout from "@/components/SectionLayout";
 import ShelfView from "@/components/ShelfView";
 
@@ -22,7 +23,9 @@ export const metadata: Metadata = {
 export default function ShelfPage() {
   return (
     <SectionLayout title="Shelf">
-      <ShelfView />
+      <Suspense fallback={<div>Loading...</div>}>
+        <ShelfView />
+      </Suspense>
     </SectionLayout>
   );
 }
