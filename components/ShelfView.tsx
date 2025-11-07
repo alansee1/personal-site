@@ -9,11 +9,15 @@ import BookshelfView from "./BookshelfView";
 type Tab = "books" | "games";
 
 export default function ShelfView() {
+  const [activeTab, setActiveTab] = useState<Tab>("books");
   const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState<Tab>(
-    tabParam === "games" ? "games" : "books"
-  );
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "games") {
+      setActiveTab("games");
+    }
+  }, [searchParams]);
 
   const { books, games } = shelfData;
 
