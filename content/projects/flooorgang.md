@@ -1,10 +1,10 @@
 ---
-slug: nba-90ers
+slug: flooorgang
 ---
 
 ## Overview
 
-Automated NBA betting analysis tool that identifies players who consistently hit stat thresholds (90%ers) by comparing historical performance to betting lines
+Automated NBA prop betting analysis tool that finds players who consistently hit stat thresholds (their "floor") by analyzing historical performance against betting lines
 
 ## What We Built
 
