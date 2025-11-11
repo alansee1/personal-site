@@ -76,7 +76,7 @@ function getMarkdownContent(slug: string): string | null {
 // Fetch work items for this project (completed only)
 async function getProjectNotes(projectId: number): Promise<WorkItem[]> {
   const { data, error } = await supabaseClient
-    .from('notes')
+    .from('works')
     .select('*')
     .eq('project_id', projectId)
     .eq('status', 'completed')

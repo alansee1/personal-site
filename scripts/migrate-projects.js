@@ -79,47 +79,47 @@ async function migrateProjects() {
   console.log('\n📊 ID Mapping:');
   console.log(JSON.stringify(idMapping, null, 2));
 
-  // Step 3: Count notes per project
-  console.log('\n🔄 Analyzing notes table...');
+  // Step 3: Count works per project
+  console.log('\n🔄 Analyzing works table...');
 
   for (const [slug, id] of Object.entries(idMapping)) {
     const { count } = await supabase
-      .from('notes')
+      .from('works')
       .select('*', { count: 'exact', head: true })
       .eq('project_id', slug);
 
-    console.log(`   "${slug}" (→ ID ${id}): ${count} notes`);
+    console.log(`   "${slug}" (→ ID ${id}): ${count} works`);
   }
 
-  console.log('\n⚠️  IMPORTANT: Notes table migration requires manual steps:');
+  console.log('\n⚠️  IMPORTANT: Works table migration requires manual steps:');
   console.log('\n   Run these SQL commands in Supabase SQL Editor:\n');
 
   console.log('   -- Step 1: Add temporary column');
-  console.log('   ALTER TABLE notes ADD COLUMN IF NOT EXISTS project_id_new INTEGER;\n');
+  console.log('   ALTER TABLE works ADD COLUMN IF NOT EXISTS project_id_new INTEGER;\n');
 
   for (const [slug, id] of Object.entries(idMapping)) {
     console.log(`   -- Update "${slug}" → ${id}`);
-    console.log(`   UPDATE notes SET project_id_new = ${id} WHERE project_id = '${slug}';`);
+    console.log(`   UPDATE works SET project_id_new = ${id} WHERE project_id = '${slug}';`);
   }
 
-  console.log('\n   -- Step 2: Verify all notes mapped');
-  console.log('   SELECT COUNT(*) FROM notes WHERE project_id_new IS NULL;');
+  console.log('\n   -- Step 2: Verify all works mapped');
+  console.log('   SELECT COUNT(*) FROM works WHERE project_id_new IS NULL;');
   console.log('   -- Should return 0\n');
 
   console.log('   -- Step 3: Drop old column and rename');
-  console.log('   ALTER TABLE notes DROP COLUMN project_id;');
-  console.log('   ALTER TABLE notes RENAME COLUMN project_id_new TO project_id;');
-  console.log('   ALTER TABLE notes ALTER COLUMN project_id SET NOT NULL;\n');
+  console.log('   ALTER TABLE works DROP COLUMN project_id;');
+  console.log('   ALTER TABLE works RENAME COLUMN project_id_new TO project_id;');
+  console.log('   ALTER TABLE works ALTER COLUMN project_id SET NOT NULL;\n');
 
   console.log('   -- Step 4: Add foreign key constraint');
-  console.log('   ALTER TABLE notes');
+  console.log('   ALTER TABLE works');
   console.log('     ADD CONSTRAINT fk_project');
   console.log('     FOREIGN KEY (project_id)');
   console.log('     REFERENCES projects(id)');
   console.log('     ON DELETE CASCADE;\n');
 
   console.log('   -- Step 5: Add index');
-  console.log('   CREATE INDEX IF NOT EXISTS idx_notes_project_id ON notes (project_id);\n');
+  console.log('   CREATE INDEX IF NOT EXISTS idx_works_project_id ON works (project_id);\n');
 
   // Step 4: Verify migration
   console.log('🔍 Verifying projects migration...');

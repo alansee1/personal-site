@@ -2,7 +2,7 @@
  * Migration Script: notes.json → Supabase
  *
  * This script reads existing notes from data/notes.json and inserts them
- * into the Supabase notes table.
+ * into the Supabase works table.
  *
  * Run with: node scripts/migrate-notes.js
  */
@@ -47,19 +47,19 @@ async function migrateNotes() {
   const notesData = JSON.parse(fs.readFileSync(notesPath, 'utf-8'));
   console.log(`📊 Found ${notesData.length} notes to migrate\n`);
 
-  // Check if notes table is empty
-  const { data: existingNotes, error: checkError } = await supabase
-    .from('notes')
+  // Check if works table is empty
+  const { data: existingWorks, error: checkError } = await supabase
+    .from('works')
     .select('id')
     .limit(1);
 
   if (checkError) {
-    console.error('❌ Error checking existing notes:', checkError);
+    console.error('❌ Error checking existing works:', checkError);
     process.exit(1);
   }
 
-  if (existingNotes && existingNotes.length > 0) {
-    console.warn('⚠️  Warning: notes table already contains data!');
+  if (existingWorks && existingWorks.length > 0) {
+    console.warn('⚠️  Warning: works table already contains data!');
     console.warn('This script will add to existing data (no duplicates check).');
     console.warn('\nPress Ctrl+C to cancel, or wait 5 seconds to continue...\n');
     await new Promise(resolve => setTimeout(resolve, 5000));
@@ -84,7 +84,7 @@ async function migrateNotes() {
     console.log(`📤 Inserting batch ${Math.floor(i / batchSize) + 1} (${batch.length} notes)...`);
 
     const { data, error } = await supabase
-      .from('notes')
+      .from('works')
       .insert(batch)
       .select();
 
@@ -107,10 +107,10 @@ async function migrateNotes() {
 
   // Verify the data
   const { count } = await supabase
-    .from('notes')
+    .from('works')
     .select('*', { count: 'exact', head: true });
 
-  console.log(`\n🔍 Verification: notes table now has ${count} total records\n`);
+  console.log(`\n🔍 Verification: works table now has ${count} total records\n`);
 }
 
 // Run migration

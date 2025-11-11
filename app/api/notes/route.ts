@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseClient } from '@/lib/supabase';
 
-// Define the Work Item type (notes table with work management fields)
+// Define the Work Item type (works table with work management fields)
 export type WorkItem = {
   id?: number;
   project_id: number;
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     // Build query - join with projects table to get project info
     // Only fetch completed items for public display
     let query = supabaseClient
-      .from('notes')
+      .from('works')
       .select('*, projects(id, slug, title)')
       .eq('status', 'completed')
       .order('completed_at', { ascending: false });
@@ -51,9 +51,9 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching notes:', error);
+      console.error('Error fetching works:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch notes', details: error.message },
+        { error: 'Failed to fetch works', details: error.message },
         { status: 500 }
       );
     }
