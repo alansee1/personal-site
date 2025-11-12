@@ -29,6 +29,7 @@ type WorkItem = {
   summary: string;
   completed_summary: string | null;
   tags: string[];
+  created_at: string;
 };
 
 interface ProjectPageContentProps {
