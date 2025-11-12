@@ -55,14 +55,15 @@ export default function WorkLogSection({ notes }: WorkLogSectionProps) {
 
   return (
     <div className="w-full max-w-4xl mt-12 mb-12">
-      <details open={isOpen} onToggle={(e) => setIsOpen(e.currentTarget.open)}>
-        <summary className="cursor-pointer text-2xl font-light text-white mb-6 flex items-center gap-3 list-none">
+      <details open={isOpen} onToggle={(e) => setIsOpen(e.currentTarget.open)} className="group">
+        <summary className="cursor-pointer text-2xl font-light text-white mb-6 flex items-center gap-3 [&::-webkit-details-marker]:hidden [&::marker]:hidden list-none">
           <span>Work Log ({notes.length})</span>
           <svg
-            className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-90' : ''}`}
+            className={`w-5 h-5 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>

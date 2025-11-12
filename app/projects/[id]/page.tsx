@@ -35,6 +35,7 @@ type WorkItem = {
   summary: string;
   completed_summary: string | null;
   tags: string[];
+  created_at: string;
 };
 
 // Fetch project from Supabase
@@ -73,7 +74,7 @@ function getMarkdownContent(slug: string): string | null {
   }
 }
 
-// Fetch work items for this project (completed only)
+// Fetch completed work items for this project
 async function getProjectNotes(projectId: number): Promise<WorkItem[]> {
   const { data, error } = await supabaseClient
     .from('works')
@@ -81,6 +82,22 @@ async function getProjectNotes(projectId: number): Promise<WorkItem[]> {
     .eq('project_id', projectId)
     .eq('status', 'completed')
     .order('completed_at', { ascending: false });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data as WorkItem[];
+}
+
+// Fetch pending work items for this project
+async function getPendingWork(projectId: number): Promise<WorkItem[]> {
+  const { data, error } = await supabaseClient
+    .from('works')
+    .select('*')
+    .eq('project_id', projectId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
 
   if (error || !data) {
     return [];
@@ -128,6 +145,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
   const markdownContent = getMarkdownContent(slug);
   const notes = await getProjectNotes(project.id);
+  const pendingWork = await getPendingWork(project.id);
 
   // Get status badge color
   const getStatusColor = (status: string) => {
@@ -150,6 +168,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           project={project}
           markdownContent={markdownContent}
           notes={notes}
+          pendingWork={pendingWork}
           statusColor={getStatusColor(project.status)}
         />
       </div>

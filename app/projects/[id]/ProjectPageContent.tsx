@@ -1,10 +1,9 @@
 "use client";
 
-import WorkLogSection from "./WorkLogSection";
 import ProjectHeader from "./ProjectHeader";
 import ProjectContent from "./ProjectContent";
 import BackButton from "./BackButton";
-import MarkdownSection from "./MarkdownSection";
+import ProjectTabs from "./ProjectTabs";
 
 type Project = {
   id: number;
@@ -36,6 +35,7 @@ interface ProjectPageContentProps {
   project: Project;
   markdownContent: string | null;
   notes: WorkItem[];
+  pendingWork: WorkItem[];
   statusColor: string;
 }
 
@@ -43,6 +43,7 @@ export default function ProjectPageContent({
   project,
   markdownContent,
   notes,
+  pendingWork,
   statusColor,
 }: ProjectPageContentProps) {
   return (
@@ -65,13 +66,12 @@ export default function ProjectPageContent({
         github={project.github}
       />
 
-      {/* Markdown Content */}
-      {markdownContent && (
-        <MarkdownSection content={markdownContent} />
-      )}
-
-      {/* Work Log Section (Client Component) */}
-      <WorkLogSection notes={notes} />
+      {/* Main Tabs - Overview & Work Items */}
+      <ProjectTabs
+        markdownContent={markdownContent}
+        pendingWork={pendingWork}
+        completedWork={notes}
+      />
     </>
   );
 }
