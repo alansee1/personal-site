@@ -14,12 +14,12 @@ I had been tracking workouts in my Notes app since October 2023 - over 420 gym s
 - **SQLite database** with normalized schema
 - Successfully imported **421 workouts**, **2,305 exercise entries**, **94 unique exercises**
 
-### Phase 2: TikTok Video
+### Phase 2: Progress Visualization
 - **30-second animated video** using Remotion (React-based video framework)
 - **GitHub-style heatmap calendar** showing workout consistency over 2 years
 - **Animated weight progression chart** (210 lbs → 232.5 lbs)
 - **Travel break highlights** with labeled red bars
-- **TikTok-optimized layout** with proper safe zones
+- **Mobile-optimized layout** with proper safe zones
 
 ## Key Stats
 
@@ -45,7 +45,7 @@ I had been tracking workouts in my Notes app since October 2023 - over 420 gym s
 
 ## Demo
 
-_[Demo video will be embedded here - TikTok video + before/after comparison]_
+_[Demo video will be embedded here - animated progress visualization]_
 
 ## Future Enhancements
 

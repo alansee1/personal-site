@@ -322,10 +322,8 @@ export default function Home() {
 
 
   const socialLinks = [
-    { name: "TikTok", icon: "fa6-brands:tiktok", href: "#" },
     { name: "LinkedIn", icon: "fa6-brands:linkedin", href: "https://www.linkedin.com/in/alan-see-880bb8140/" },
     { name: "X", icon: "fa6-brands:x-twitter", href: "https://twitter.com/seealanh" },
-    { name: "Facebook", icon: "fa6-brands:facebook", href: "#" },
     { name: "GitHub", icon: "fa6-brands:github", href: "https://github.com/alansee1" },
   ];
 
