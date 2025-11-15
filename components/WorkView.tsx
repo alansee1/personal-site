@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import WorkItemRowSkeleton from "./WorkItemRowSkeleton";
+import WorkCalendar from "./WorkCalendar";
 import type { WorkItemWithProject, ProjectMetadata } from "@/lib/types";
 
 type SortField = "time" | "project";
@@ -15,12 +16,25 @@ export default function WorkView() {
   const [projects, setProjects] = useState<ProjectMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortField, setSortField] = useState<SortField>("time");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  // Disable body scroll when modal is open
+  useEffect(() => {
+    if (showCalendarModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showCalendarModal]);
 
   // Fetch notes and projects from API on mount
   useEffect(() => {
@@ -225,7 +239,7 @@ export default function WorkView() {
     <div className="w-full max-w-6xl space-y-6">
       {/* Filters */}
       <div className="space-y-4">
-        {/* Search and Project Filter */}
+        {/* Search, Project Filter, and Visualize Button */}
         <div className="flex gap-4">
           <input
             type="text"
@@ -252,6 +266,12 @@ export default function WorkView() {
               </option>
             ))}
           </select>
+          <button
+            onClick={() => setShowCalendarModal(true)}
+            className="px-4 py-2 bg-white text-black rounded font-medium hover:bg-zinc-200 transition-colors whitespace-nowrap"
+          >
+            Visualize
+          </button>
         </div>
 
         {/* Active Tag Filters */}
@@ -374,6 +394,44 @@ export default function WorkView() {
           </button>
         </div>
       </div>
+
+      {/* Calendar Modal */}
+      {showCalendarModal && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowCalendarModal(false)}
+        >
+          <div
+            className="bg-zinc-950 border border-zinc-800 rounded-lg max-w-7xl w-full max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-zinc-950 border-b border-zinc-800 p-4 flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg font-medium text-zinc-100">Work Calendar</h2>
+              <button
+                onClick={() => setShowCalendarModal(false)}
+                className="text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 overflow-auto flex-1">
+              <WorkCalendar workItems={workItems} projects={projects} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
