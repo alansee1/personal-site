@@ -1,39 +1,18 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import NoteRowSkeleton from "./NoteRowSkeleton";
-
-type Note = {
-  id: number;
-  completed_at: string;
-  started_at: string | null;
-  status: string;
-  project_id: number;
-  summary: string;
-  completed_summary: string | null;
-  tags: string[];
-  projects?: {
-    id: number;
-    slug: string;
-    title: string;
-  };
-};
-
-type Project = {
-  id: number;
-  slug: string;
-  title: string;
-};
+import WorkItemRowSkeleton from "./WorkItemRowSkeleton";
+import type { WorkItemWithProject, ProjectMetadata } from "@/lib/types";
 
 type SortField = "time" | "project";
 type SortDirection = "asc" | "desc";
 
-export default function NotesView() {
+export default function WorkView() {
   const ITEMS_PER_PAGE = 20;
 
   // State
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [workItems, setWorkItems] = useState<WorkItemWithProject[]>([]);
+  const [projects, setProjects] = useState<ProjectMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,7 +34,7 @@ export default function NotesView() {
           throw new Error('Failed to fetch notes');
         }
         const notesJson = await notesResponse.json();
-        setNotes(notesJson.data || []);
+        setWorkItems(notesJson.data || []);
 
         // Fetch projects for filter dropdown
         const projectsResponse = await fetch('/api/projects');
@@ -127,8 +106,8 @@ export default function NotesView() {
   };
 
   // Filter and sort data
-  const filteredAndSortedNotes = useMemo(() => {
-    let filtered = [...notes];
+  const filteredAndSortedWorkItems = useMemo(() => {
+    let filtered = [...workItems];
 
     // Filter by search query
     if (searchQuery) {
@@ -152,8 +131,8 @@ export default function NotesView() {
     // Sort
     filtered.sort((a, b) => {
       if (sortField === "time") {
-        const timeA = new Date(a.completed_at).getTime();
-        const timeB = new Date(b.completed_at).getTime();
+        const timeA = new Date(a.completed_at!).getTime();
+        const timeB = new Date(b.completed_at!).getTime();
         return sortDirection === "asc" ? timeA - timeB : timeB - timeA;
       } else {
         const projectA = a.projects?.title || "";
@@ -165,13 +144,13 @@ export default function NotesView() {
     });
 
     return filtered;
-  }, [notes, searchQuery, selectedProject, selectedTags, sortField, sortDirection]);
+  }, [workItems, searchQuery, selectedProject, selectedTags, sortField, sortDirection]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredAndSortedNotes.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredAndSortedWorkItems.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedNotes = filteredAndSortedNotes.slice(startIndex, endIndex);
+  const paginatedWorkItems = filteredAndSortedWorkItems.slice(startIndex, endIndex);
 
   // Loading state
   if (loading) {
@@ -218,14 +197,14 @@ export default function NotesView() {
               </tr>
             </thead>
             <tbody>
-              <NoteRowSkeleton />
-              <NoteRowSkeleton />
-              <NoteRowSkeleton />
-              <NoteRowSkeleton />
-              <NoteRowSkeleton />
-              <NoteRowSkeleton />
-              <NoteRowSkeleton />
-              <NoteRowSkeleton />
+              <WorkItemRowSkeleton />
+              <WorkItemRowSkeleton />
+              <WorkItemRowSkeleton />
+              <WorkItemRowSkeleton />
+              <WorkItemRowSkeleton />
+              <WorkItemRowSkeleton />
+              <WorkItemRowSkeleton />
+              <WorkItemRowSkeleton />
             </tbody>
           </table>
         </div>
@@ -321,14 +300,14 @@ export default function NotesView() {
           </tr>
         </thead>
         <tbody>
-          {paginatedNotes.map((note, index) => {
+          {paginatedWorkItems.map((note, index) => {
             return (
               <tr
                 key={note.id}
                 className="border-b border-zinc-800/50 hover:bg-zinc-900/30 transition-colors"
               >
                 <td className="py-3 pr-6 text-zinc-500 whitespace-nowrap align-top">
-                  {formatRelativeTime(note.completed_at)}
+                  {formatRelativeTime(note.completed_at!)}
                 </td>
                 <td className="py-3 pr-6 text-zinc-400 whitespace-nowrap align-top">
                   {note.projects?.title || '-'}
@@ -361,7 +340,7 @@ export default function NotesView() {
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-zinc-500">
-          Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedNotes.length)} of {filteredAndSortedNotes.length} notes
+          Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedWorkItems.length)} of {filteredAndSortedWorkItems.length} notes
         </div>
         <div className="flex items-center gap-2">
           <button

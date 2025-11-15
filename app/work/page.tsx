@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import SectionLayout from "@/components/SectionLayout";
-import NotesView from "@/components/NotesView";
+import WorkView from "@/components/WorkView";
 
 export const metadata: Metadata = {
   title: "Work - Alan See",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 export default function WorkPage() {
   return (
     <SectionLayout title="Work">
-      <NotesView />
+      <WorkView />
     </SectionLayout>
   );
 }

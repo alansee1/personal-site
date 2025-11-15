@@ -1,10 +1,10 @@
 import Shimmer from './Shimmer';
 
 /**
- * Skeleton loading state for note table rows
- * Matches the exact layout of NotesView table rows
+ * Skeleton loading state for work item table rows
+ * Matches the exact layout of WorkView table rows
  */
-export default function NoteRowSkeleton() {
+export default function WorkItemRowSkeleton() {
   return (
     <tr className="border-b border-zinc-800/50">
       {/* Time column */}

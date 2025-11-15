@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import ProjectsView from "@/components/ProjectsView";
 import BlogView from "@/components/BlogView";
 import ResumeView from "@/components/ResumeView";
-import NotesView from "@/components/NotesView";
+import WorkView from "@/components/WorkView";
 import ShelfView from "@/components/ShelfView";
 import { ENTRY_TIMING, NAV_TIMING, EASINGS } from "@/lib/animations";
 
@@ -603,7 +603,7 @@ export default function Home() {
                       )}
                       {activeSection === "blog" && <BlogView key="blog" isEmbedded={true} skipReverseAnimation={isReturning} />}
                       {activeSection === "about" && <ResumeView key="about" />}
-                      {activeSection === "work" && <NotesView key="work" />}
+                      {activeSection === "work" && <WorkView key="work" />}
                       {activeSection === "shelf" && <ShelfView key="shelf" />}
                     </AnimatePresence>
                   </motion.div>
