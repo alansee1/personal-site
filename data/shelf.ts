@@ -260,6 +260,11 @@ export const shelfData: ShelfData = {
   ],
   games: [
     {
+      title: "Extreme Connect 4",
+      description: "Classic Connect 4 or go extreme with Connect-5 through Connect-10 on scaled boards",
+      playLink: "/shelf/extreme-connect-4"
+    },
+    {
       title: "Cosmic Drift",
       description: "Space battle royale absorption game with gravity mechanics and AI opponents",
       playLink: "/shelf/cosmic-drift"
