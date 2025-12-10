@@ -21,12 +21,14 @@ export default function BackButton({ onBackClick }: BackButtonProps) {
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className="text-white text-sm hover:text-zinc-400 transition-colors mb-8 cursor-pointer"
-    >
-      ← back
-    </button>
+    <div className="w-full max-w-6xl mb-8">
+      <button
+        type="button"
+        onClick={handleClick}
+        className="text-white text-sm hover:text-zinc-400 transition-colors cursor-pointer"
+      >
+        ← back
+      </button>
+    </div>
   );
 }
