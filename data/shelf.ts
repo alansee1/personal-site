@@ -26,6 +26,16 @@ export interface ShelfData {
 export const shelfData: ShelfData = {
   books: [
     {
+      title: "Shoe Dog",
+      author: "Phil Knight",
+      dateFinished: "2025-12-31",
+      coverUrl: "https://books.google.com/books/content?id=wO3PCgAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+      isbn: "9781501135934",
+      genres: ["Biography & Autobiography"],
+      pageCount: 368,
+      description: "In this instant and tenacious New York Times bestseller, Nike founder and board chairman Phil Knight \"offers a rare and revealing look at the notoriously media-shy man behind the swoosh\" (Booklist, starred review), illuminating his company's early days as an intrepid start-up and its evolution into..."
+    },
+    {
       title: "The Wise Man's Fear",
       author: "Patrick Rothfuss",
       dateFinished: "2025-11-07",
