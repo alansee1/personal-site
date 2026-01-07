@@ -8,6 +8,8 @@ import WorkoutProblemSection from "@/components/WorkoutProblemSection";
 import WorkoutTLDR from "@/components/WorkoutTLDR";
 import WhatWeBuiltHeader from "@/components/WhatWeBuiltHeader";
 import WorkoutWriteup from "@/components/WorkoutWriteup";
+import AIArtTLDR from "@/components/AIArtTLDR";
+import AIArtWriteup from "@/components/AIArtWriteup";
 
 type MarkdownSectionProps = {
   content: string;
@@ -20,6 +22,8 @@ const customComponents: Record<string, React.ComponentType> = {
   WorkoutTLDR,
   WhatWeBuiltHeader,
   WorkoutWriteup,
+  AIArtTLDR,
+  AIArtWriteup,
 };
 
 // Shared markdown component styles
