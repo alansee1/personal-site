@@ -49,30 +49,33 @@ export default function ProjectPageContent({
 }: ProjectPageContentProps) {
   return (
     <>
-      {/* Back button */}
+      {/* Back button - left aligned */}
       <BackButton />
 
-      {/* Project Header */}
-      <ProjectHeader
-        slug={project.slug}
-        title={project.title}
-        status={project.status}
-        statusColor={statusColor}
-        description={project.description}
-      />
+      {/* Centered content container */}
+      <div className="w-full flex flex-col items-center">
+        {/* Project Header */}
+        <ProjectHeader
+          slug={project.slug}
+          title={project.title}
+          status={project.status}
+          statusColor={statusColor}
+          description={project.description}
+        />
 
-      <ProjectContent
-        tech={project.tech}
-        url={project.url}
-        github={project.github}
-      />
+        <ProjectContent
+          tech={project.tech}
+          url={project.url}
+          github={project.github}
+        />
 
-      {/* Main Tabs - Overview & Work Items */}
-      <ProjectTabs
-        markdownContent={markdownContent}
-        pendingWork={pendingWork}
-        completedWork={notes}
-      />
+        {/* Main Tabs - Overview & Work Items */}
+        <ProjectTabs
+          markdownContent={markdownContent}
+          pendingWork={pendingWork}
+          completedWork={notes}
+        />
+      </div>
     </>
   );
 }

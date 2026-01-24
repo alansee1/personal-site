@@ -163,7 +163,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="w-full min-h-screen flex flex-col items-center pt-8 px-8 pb-16 overflow-y-auto overflow-x-hidden">
+      <div className="w-full min-h-screen flex flex-col items-start pt-8 pl-8 pr-8 pb-16 overflow-y-auto overflow-x-hidden">
         <ProjectPageContent
           project={project}
           markdownContent={markdownContent}
