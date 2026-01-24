@@ -32,7 +32,7 @@ export default function ProjectTabs({
   const totalWorkItems = pendingWork.length + completedWork.length;
 
   return (
-    <div className="w-full max-w-6xl mt-4">
+    <div className="w-full max-w-7xl mt-4">
       {/* Main Tab Headers */}
       <div className="flex border-b border-zinc-800 mb-6">
         <button

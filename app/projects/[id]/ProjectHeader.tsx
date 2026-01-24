@@ -10,7 +10,7 @@ type ProjectHeaderProps = {
 
 export default function ProjectHeader({ slug, title, status, statusColor, description }: ProjectHeaderProps) {
   return (
-    <div className="w-full max-w-6xl mb-6" style={{ viewTransitionName: `project-card-${slug}` }}>
+    <div className="w-full max-w-7xl mb-6" style={{ viewTransitionName: `project-card-${slug}` }}>
       <div className="flex items-center gap-4 mb-4">
         <h1
           className="font-light tracking-wide text-white text-5xl md:text-6xl"

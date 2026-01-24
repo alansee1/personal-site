@@ -8,7 +8,7 @@ type ProjectContentProps = {
 
 export default function ProjectContent({ tech, url, github }: ProjectContentProps) {
   return (
-    <div className="w-full max-w-6xl">
+    <div className="w-full max-w-7xl">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         {/* Tech Stack */}
         <div>
